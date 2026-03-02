@@ -1,0 +1,77 @@
+:root {
+	--bg-primary: #09090b;
+	--bg-secondary: #111113;
+	--bg-card: rgba(255, 255, 255, 0.03);
+	--bg-card-hover: rgba(255, 255, 255, 0.06);
+	--text-primary: #fafafa;
+	--text-secondary: #a1a1aa;
+	--text-muted: #52525b;
+	--accent: #818cf8;
+	--accent-bright: #a78bfa;
+	--gradient: linear-gradient(135deg, #6366f1, #a855f7);
+	--gradient-text: linear-gradient(135deg, #818cf8, #c084fc);
+	--border: rgba(255, 255, 255, 0.06);
+	--border-bright: rgba(255, 255, 255, 0.12);
+	--radius: 16px;
+	--radius-sm: 8px;
+	--max-width: 900px;
+	--font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+*,
+*::before,
+*::after {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+html {
+	scroll-behavior: smooth;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+body {
+	font-family: var(--font);
+	background: var(--bg-primary);
+	color: var(--text-primary);
+	line-height: 1.7;
+	overflow-x: hidden;
+}
+
+::selection {
+	background: rgba(129, 140, 248, 0.3);
+	color: var(--text-primary);
+}
+
+a {
+	color: var(--accent);
+	text-decoration: none;
+	transition: color 0.2s;
+}
+
+a:hover {
+	color: var(--accent-bright);
+}
+
+.progress-bar {
+	position: fixed;
+	top: 0;
+	left: 0;
+	height: 2px;
+	background: var(--gradient);
+	z-index: 1000;
+	transition: width 0.1s linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+
+	.scroll-reveal {
+		opacity: 1 !important;
+		transform: none !important;
+	}
+}
