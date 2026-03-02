@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ScrollReveal from '$lib/components/ScrollReveal.svelte';
+	import TeamResults from '$lib/components/TeamResults.svelte';
 </script>
 
 <!-- ============================================================ -->
@@ -1032,6 +1033,26 @@
 					</div>
 				</div>
 			</div>
+		</ScrollReveal>
+	</div>
+</section>
+
+<!-- ============================================================ -->
+<!-- TEAM QUIZ RESULTS                                            -->
+<!-- ============================================================ -->
+<section class="section section-alt" id="team-results">
+	<div class="container">
+		<ScrollReveal>
+			<p class="label">Your Team</p>
+			<h2>How Safe Does Your Team Feel?</h2>
+		</ScrollReveal>
+		<ScrollReveal delay={150}>
+			<p class="lead">
+				Take the psychological safety quiz and see how your team really feels about coding together.
+			</p>
+		</ScrollReveal>
+		<ScrollReveal delay={300}>
+			<TeamResults />
 		</ScrollReveal>
 	</div>
 </section>
