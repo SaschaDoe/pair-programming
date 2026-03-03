@@ -2,119 +2,14 @@
 	import ScrollReveal from '$lib/components/ScrollReveal.svelte';
 	import TeamResults from '$lib/components/TeamResults.svelte';
 	import FeedbackForm from '$lib/components/FeedbackForm.svelte';
-
-	let originWrapper: HTMLElement | undefined = $state();
-	let originScroll = $state(0);
-
-	$effect(() => {
-		if (!originWrapper) return;
-		const onScroll = () => {
-			const rect = originWrapper!.getBoundingClientRect();
-			const total = originWrapper!.scrollHeight - window.innerHeight;
-			originScroll = Math.min(1, Math.max(0, -rect.top / total));
-		};
-		window.addEventListener('scroll', onScroll, { passive: true });
-		return () => window.removeEventListener('scroll', onScroll);
-	});
-
-	// Smooth per-phase opacity with crossfade overlap
-	function fadeCalc(scroll: number, fadeIn: number, solidStart: number, solidEnd: number, fadeOut: number): number {
-		if (scroll <= fadeIn) return 0;
-		if (scroll <= solidStart) return (scroll - fadeIn) / (solidStart - fadeIn);
-		if (scroll <= solidEnd) return 1;
-		if (scroll <= fadeOut) return 1 - (scroll - solidEnd) / (fadeOut - solidEnd);
-		return 0;
-	}
-
-	let opPhotos  = $derived(fadeCalc(originScroll, -0.01, 0.02, 0.18, 0.28));
-	let opText    = $derived(fadeCalc(originScroll, 0.20, 0.30, 0.45, 0.55));
-	let opBullets = $derived(fadeCalc(originScroll, 0.48, 0.58, 0.72, 0.82));
-	let opGermany = $derived(fadeCalc(originScroll, 0.75, 0.85, 0.97, 1.01));
-
-	// ── Where to Pair — architecture complexity section ──
-	let complexWrapper: HTMLElement | undefined = $state();
-	let complexScroll = $state(0);
-
-	$effect(() => {
-		if (!complexWrapper) return;
-		const onScroll = () => {
-			const rect = complexWrapper!.getBoundingClientRect();
-			const total = complexWrapper!.scrollHeight - window.innerHeight;
-			complexScroll = Math.min(1, Math.max(0, -rect.top / total));
-		};
-		window.addEventListener('scroll', onScroll, { passive: true });
-		return () => window.removeEventListener('scroll', onScroll);
-	});
-
-	function rampIn(scroll: number, start: number, end: number): number {
-		if (scroll <= start) return 0;
-		if (scroll >= end) return 1;
-		return (scroll - start) / (end - start);
-	}
-
-	// Phase opacities — progressive build-up
-	let cpxLayers  = $derived(Math.min(rampIn(complexScroll, 0.0, 0.06), 1 - rampIn(complexScroll, 0.14, 0.24)));
-	let cpxNodes   = $derived(rampIn(complexScroll, 0.18, 0.28));
-	let cpxLines   = $derived(rampIn(complexScroll, 0.30, 0.40));
-	let cpxArrow   = $derived(rampIn(complexScroll, 0.44, 0.54));
-	let cpxRed     = $derived(rampIn(complexScroll, 0.58, 0.68));
-	let cpxAll     = $derived(complexScroll < 0.76 ? 1 : Math.max(0, 1 - (complexScroll - 0.76) / 0.08));
-	let cpxEnd     = $derived(rampIn(complexScroll, 0.82, 0.92));
-
-	// Class nodes data
-	type CNode = { id: string; label: string; x: number; y: number; w: number; layer: string; red?: boolean };
-	const classNodes: CNode[] = [
-		// ── Config ──
-		{ id: 'appConfig',    label: 'AppConfig',        x: 255, y: 14,  w: 84,  layer: 'config' },
-		{ id: 'routes',       label: 'Routes',           x: 365, y: 22,  w: 62,  layer: 'config' },
-		// ── UI ──
-		{ id: 'loginPage',    label: 'LoginPage',        x: 28,  y: 78,  w: 82,  layer: 'ui' },
-		{ id: 'dashboard',    label: 'Dashboard',        x: 150, y: 85,  w: 82,  layer: 'ui' },
-		{ id: 'labPanel',     label: 'LabPanel',         x: 320, y: 78,  w: 76,  layer: 'ui' },
-		{ id: 'protEditor',   label: 'ProtocolEditor',   x: 460, y: 85,  w: 110, layer: 'ui' },
-		// ── Services / VMs / DTOs ──
-		{ id: 'authSvc',      label: 'AuthService',      x: 12,  y: 152, w: 88,  layer: 'svc' },
-		{ id: 'loginVM',      label: 'LoginVM',          x: 12,  y: 186, w: 72,  layer: 'svc' },
-		{ id: 'labPanelVM',   label: 'LabPanelVM',       x: 195, y: 152, w: 92,  layer: 'svc' },
-		{ id: 'protocolVM',   label: 'ProtocolVM',       x: 195, y: 186, w: 88,  layer: 'svc' },
-		{ id: 'jsonExporter', label: 'JsonExporter',     x: 375, y: 160, w: 96,  layer: 'svc' },
-		{ id: 'userDTO',      label: 'UserDTO',          x: 545, y: 168, w: 70,  layer: 'svc' },
-		// ── Use Cases ──
-		{ id: 'loginUC',      label: 'Login',            x: 48,  y: 255, w: 56,  layer: 'uc' },
-		{ id: 'runProtocol',  label: 'RunProtocol',      x: 230, y: 250, w: 96,  layer: 'uc' },
-		{ id: 'exportData',   label: 'ExportData',       x: 430, y: 255, w: 86,  layer: 'uc' },
-		// ── Domain ──
-		{ id: 'user',         label: 'User',             x: 55,  y: 338, w: 52,  layer: 'domain' },
-		{ id: 'liquidHandler',label: 'LiquidHandler',    x: 210, y: 332, w: 106, layer: 'domain' },
-		{ id: 'protocol',     label: 'Protocol',         x: 420, y: 338, w: 72,  layer: 'domain' },
-	];
-
-	type Conn = { from: string; to: string; red?: boolean };
-	const connections: Conn[] = [
-		// ── Stable chain (User / Login) ──
-		{ from: 'loginPage',    to: 'loginVM' },
-		{ from: 'loginVM',      to: 'loginUC' },
-		{ from: 'loginVM',      to: 'authSvc' },
-		{ from: 'loginUC',      to: 'user' },
-		{ from: 'authSvc',      to: 'userDTO' },
-		{ from: 'appConfig',    to: 'loginPage' },
-		{ from: 'routes',       to: 'dashboard' },
-		// ── Volatile chain (Lab Handling) — turns red ──
-		{ from: 'labPanel',     to: 'labPanelVM',   red: true },
-		{ from: 'protEditor',   to: 'protocolVM',   red: true },
-		{ from: 'dashboard',    to: 'labPanelVM',   red: true },
-		{ from: 'labPanelVM',   to: 'runProtocol',  red: true },
-		{ from: 'labPanelVM',   to: 'jsonExporter', red: true },
-		{ from: 'protocolVM',   to: 'runProtocol',  red: true },
-		{ from: 'runProtocol',  to: 'liquidHandler', red: true },
-		{ from: 'runProtocol',  to: 'protocol',     red: true },
-		{ from: 'exportData',   to: 'protocol',     red: true },
-		{ from: 'jsonExporter', to: 'exportData',   red: true },
-	];
-
-	function nodeById(id: string) { return classNodes.find(n => n.id === id)!; }
-	function cx(n: CNode) { return n.x + n.w / 2; }
-	function cy(n: CNode) { return n.y + 13; }
+	import OriginSection from '$lib/components/OriginSection.svelte';
+	import ArchitectureDiagram from '$lib/components/ArchitectureDiagram.svelte';
+	import PracticalExample from '$lib/components/PracticalExample.svelte';
+	import {
+		benefits, safetyTips, classicObjections, pitfalls, pairingStyles,
+		whenColumns, sessionSteps, bestPractices, summaryCards, sources,
+		barriers, aiAnswers, modernObjections
+	} from '$lib/data/presentationContent';
 </script>
 
 <!-- ============================================================ -->
@@ -191,72 +86,7 @@
 <!-- ============================================================ -->
 <!-- WHERE IT CAME FROM                                           -->
 <!-- ============================================================ -->
-<section class="origin-scroll" bind:this={originWrapper}>
-	<div class="origin-sticky">
-		<div class="container">
-			<p class="label">The Origin</p>
-			<h2>Where It Came From</h2>
-
-			<div class="origin-stage">
-				<!-- Phase 1: Photos -->
-				<div class="origin-phase" style="opacity: {opPhotos}; transform: translateY({(1 - opPhotos) * 30}px);">
-					<div class="origin-portraits">
-						<div class="origin-portrait">
-							<img src="/pics/Kent_Beck.jpg" alt="Kent Beck" />
-							<span>Kent Beck</span>
-						</div>
-						<div class="origin-portrait">
-							<img src="/pics/Ron_Jeffries.jpg" alt="Ron Jeffries" />
-							<span>Ron Jeffries</span>
-						</div>
-						<div class="origin-portrait">
-							<img src="/pics/Martin_Fowler.jpg" alt="Martin Fowler" />
-							<span>Martin Fowler</span>
-						</div>
-						<div class="origin-portrait">
-							<img src="/pics/Robert_C._Martin.jpg" alt="Robert C. Martin" />
-							<span>Robert C. Martin</span>
-						</div>
-					</div>
-				</div>
-
-				<!-- Phase 2: XP explanation -->
-				<div class="origin-phase" style="opacity: {opText}; transform: translateY({(1 - opText) * 30}px);">
-					<p class="lead">
-						The late 1990s. People were fed up with endless processes that led nowhere.
-					</p>
-					<p class="body" style="margin-top: 1.5rem;">
-						Kent Beck created <strong>Extreme Programming (XP)</strong> — a radical approach that put working software and fast feedback above heavy documentation and planning. Sit with the customer. Understand requirements <strong>fast</strong>. Ship in short cycles.
-					</p>
-					<p class="body" style="margin-top: 1rem;">
-						Pair programming was one of its core practices — two developers, one screen. That was the cutting edge.
-					</p>
-				</div>
-
-				<!-- Phase 3: XP bullet points -->
-				<div class="origin-phase" style="opacity: {opBullets}; transform: translateY({(1 - opBullets) * 30}px);">
-					<p class="lead" style="margin-bottom: 1.5rem;">Extreme Programming in a nutshell:</p>
-					<ul class="origin-bullets">
-						<li><strong>Short iterations</strong> — deliver working software every 1–2 weeks</li>
-						<li><strong>Test-Driven Development</strong> — write the test before the code</li>
-						<li><strong>Continuous Integration</strong> — merge and test constantly</li>
-						<li><strong>Pair Programming</strong> — two minds, one keyboard</li>
-						<li><strong>Collective Code Ownership</strong> — anyone can change any code</li>
-						<li><strong>Simple Design</strong> — build only what you need right now</li>
-					</ul>
-				</div>
-
-				<!-- Phase 4: Germany note -->
-				<div class="origin-phase" style="opacity: {opGermany}; transform: translateY({(1 - opGermany) * 30}px);">
-					<div class="era-tag">
-						<span class="era-dot"></span>
-						<p>Neither TDD nor pair programming ever fully took hold in the German dev community. In 2026, that seems more unlikely than ever.</p>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-</section>
+<OriginSection />
 
 <!-- ============================================================ -->
 <!-- THE TWO ROLES                                                -->
@@ -312,48 +142,15 @@
 			<h2>Why Pair Program?</h2>
 		</ScrollReveal>
 		<div class="benefits-grid">
-			<ScrollReveal delay={100}>
-				<div class="card benefit-card">
-					<div class="benefit-stat">15%</div>
-					<h3>Fewer Defects</h3>
-					<p>Significantly fewer bugs than solo code.</p>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={200}>
-				<div class="card benefit-card">
-					<div class="benefit-stat">&uarr;</div>
-					<h3>Knowledge Transfer</h3>
-					<p>Juniors learn faster. Seniors teach to solidify.</p>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={300}>
-				<div class="card benefit-card">
-					<div class="benefit-stat">&lt;/&gt;</div>
-					<h3>Better Design</h3>
-					<p>Two perspectives, cleaner architecture.</p>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={400}>
-				<div class="card benefit-card">
-					<div class="benefit-stat">&frac12;</div>
-					<h3>Faster Debugging</h3>
-					<p>Two brains find solutions faster.</p>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={500}>
-				<div class="card benefit-card">
-					<div class="benefit-stat">=</div>
-					<h3>Shared Ownership</h3>
-					<p>No single point of failure.</p>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={600}>
-				<div class="card benefit-card">
-					<div class="benefit-stat">&check;</div>
-					<h3>Real-time Review</h3>
-					<p>Bugs caught now, not days later in PR.</p>
-				</div>
-			</ScrollReveal>
+			{#each benefits as b, i}
+				<ScrollReveal delay={(i + 1) * 100}>
+					<div class="card benefit-card">
+						<div class="benefit-stat">{@html b.stat}</div>
+						<h3>{b.title}</h3>
+						<p>{b.description}</p>
+					</div>
+				</ScrollReveal>
+			{/each}
 		</div>
 	</div>
 </section>
@@ -377,30 +174,14 @@
 			</p>
 		</ScrollReveal>
 		<div class="barrier-grid">
-			<ScrollReveal delay={200}>
-				<div class="card barrier-card">
-					<h3>It requires vulnerability</h3>
-					<p>Your half-formed thoughts, your wrong turns, your "wait, how does this work again?" — all of it becomes visible. Solo, you can edit in peace. Pairing, your thinking is live.</p>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={300}>
-				<div class="card barrier-card">
-					<h3>It triggers performance anxiety</h3>
-					<p>Someone watching you code activates the same stress as public speaking. Your brain shifts from problem-solving to self-monitoring.</p>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={400}>
-				<div class="card barrier-card">
-					<h3>It exposes knowledge gaps</h3>
-					<p>Solo, you can quietly Google. Pairing makes gaps visible — and in most workplaces, gaps feel dangerous.</p>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={500}>
-				<div class="card barrier-card">
-					<h3>It requires trust most teams haven't built</h3>
-					<p>Amy Edmondson's research on psychological safety. Google's Project Aristotle. The #1 factor in high-performing teams isn't skill — it's safety.</p>
-				</div>
-			</ScrollReveal>
+			{#each barriers as b, i}
+				<ScrollReveal delay={(i + 2) * 100}>
+					<div class="card barrier-card">
+						<h3>{b.title}</h3>
+						<p>{b.description}</p>
+					</div>
+				</ScrollReveal>
+			{/each}
 		</div>
 		<ScrollReveal delay={600}>
 			<div class="callout">
@@ -446,60 +227,17 @@
 			</p>
 		</ScrollReveal>
 		<div class="tips-grid">
-			<ScrollReveal delay={100}>
-				<div class="tip">
-					<span class="tip-num">01</span>
-					<div>
-						<h3>Normalise not-knowing</h3>
-						<p>Say "I don't know" out loud — especially if you're senior. It gives everyone else permission to do the same.</p>
+			{#each safetyTips as tip, i}
+				<ScrollReveal delay={(i + 1) * 50 + 50}>
+					<div class="tip">
+						<span class="tip-num">{String(i + 1).padStart(2, '0')}</span>
+						<div>
+							<h3>{tip.title}</h3>
+							<p>{tip.description}</p>
+						</div>
 					</div>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={150}>
-				<div class="tip">
-					<span class="tip-num">02</span>
-					<div>
-						<h3>Start with low-stakes pairing</h3>
-						<p>Don't begin with the most critical codebase. Pair on a small feature, a refactor, a test — something where mistakes are cheap.</p>
-					</div>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={200}>
-				<div class="tip">
-					<span class="tip-num">03</span>
-					<div>
-						<h3>Make the first 5 minutes about humans</h3>
-						<p>Check in before you code. "How's your morning?" costs nothing and changes everything about the next hour.</p>
-					</div>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={250}>
-				<div class="tip">
-					<span class="tip-num">04</span>
-					<div>
-						<h3>Agree on ground rules</h3>
-						<p>"We'll switch every 20 minutes. We'll think out loud. We'll ask before grabbing the keyboard." Explicit beats implicit.</p>
-					</div>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={300}>
-				<div class="tip">
-					<span class="tip-num">05</span>
-					<div>
-						<h3>Celebrate mistakes publicly</h3>
-						<p>"Good thing we caught that now" is more powerful than any retrospective. Make catching errors a win, not a blame.</p>
-					</div>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={350}>
-				<div class="tip">
-					<span class="tip-num">06</span>
-					<div>
-						<h3>Give people an exit</h3>
-						<p>Pairing should never feel mandatory in the moment. "I need 30 minutes solo" is always a valid thing to say.</p>
-					</div>
-				</div>
-			</ScrollReveal>
+				</ScrollReveal>
+			{/each}
 		</div>
 		<ScrollReveal delay={400}>
 			<div class="callout">
@@ -524,46 +262,18 @@
 			<h2>Classic Objections</h2>
 		</ScrollReveal>
 		<div class="objection-response-list">
-			<ScrollReveal delay={100}>
-				<div class="objection-response">
-					<div class="objection-quote">
-						<p>"It's twice as expensive — two developers on one task."</p>
+			{#each classicObjections as obj, i}
+				<ScrollReveal delay={(i + 1) * 100}>
+					<div class="objection-response">
+						<div class="objection-quote">
+							<p>{obj.objection}</p>
+						</div>
+						<div class="response">
+							<p>{@html obj.response}</p>
+						</div>
 					</div>
-					<div class="response">
-						<p>Bugs cost <strong>10–100x</strong> more to fix in production than during development. 15% fewer defects pays for itself on critical code.</p>
-					</div>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={200}>
-				<div class="objection-response">
-					<div class="objection-quote">
-						<p>"I work better alone."</p>
-					</div>
-					<div class="response">
-						<p>For some tasks, yes. Pair programming isn't for everything. Use it <strong>selectively</strong> — for the code where the cost of getting it wrong is high.</p>
-					</div>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={300}>
-				<div class="objection-response">
-					<div class="objection-quote">
-						<p>"We tried it and it didn't work."</p>
-					</div>
-					<div class="response">
-						<p>Pairing takes practice. The first sessions are awkward. Give it <strong>2–4 weeks</strong>. Some pairs don't click — that's okay, rotate.</p>
-					</div>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={400}>
-				<div class="objection-response">
-					<div class="objection-quote">
-						<p>"My team is fully remote."</p>
-					</div>
-					<div class="response">
-						<p>Remote pairing works fine with modern tools. Some teams report it's <strong>even more focused</strong> — fewer physical distractions.</p>
-					</div>
-				</div>
-			</ScrollReveal>
+				</ScrollReveal>
+			{/each}
 		</div>
 	</div>
 </section>
@@ -578,66 +288,20 @@
 			<h2>Common Pitfalls</h2>
 		</ScrollReveal>
 		<div class="pitfalls-list">
-			<ScrollReveal delay={100}>
-				<div class="pitfall">
-					<div class="pitfall-header">
-						<h3>Mental Fatigue</h3>
-						<span class="pitfall-severity high">common</span>
+			{#each pitfalls as p, i}
+				<ScrollReveal delay={(i + 1) * 100}>
+					<div class="pitfall">
+						<div class="pitfall-header">
+							<h3>{p.title}</h3>
+							<span class="pitfall-severity {p.severity}">{p.severityLabel}</span>
+						</div>
+						<p>{p.description}</p>
+						<div class="pitfall-solution">
+							<strong>Fix:</strong> {p.fix}
+						</div>
 					</div>
-					<p>Pairing is cognitively intense.</p>
-					<div class="pitfall-solution">
-						<strong>Fix:</strong> Pomodoro — 25 min on, 5 min off. Max 4 hours/day.
-					</div>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={200}>
-				<div class="pitfall">
-					<div class="pitfall-header">
-						<h3>Personality Clashes</h3>
-						<span class="pitfall-severity medium">varies</span>
-					</div>
-					<p>Different styles and egos create friction.</p>
-					<div class="pitfall-solution">
-						<strong>Fix:</strong> Ground rules upfront. Focus on the code. Rotate pairs.
-					</div>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={300}>
-				<div class="pitfall">
-					<div class="pitfall-header">
-						<h3>Disengaged Navigator</h3>
-						<span class="pitfall-severity high">common</span>
-					</div>
-					<p>Navigator zones out or passively watches.</p>
-					<div class="pitfall-solution">
-						<strong>Fix:</strong> Switch roles often. Give the navigator active tasks.
-					</div>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={400}>
-				<div class="pitfall">
-					<div class="pitfall-header">
-						<h3>Backseat Driving</h3>
-						<span class="pitfall-severity medium">varies</span>
-					</div>
-					<p>Navigator dictates every keystroke.</p>
-					<div class="pitfall-solution">
-						<strong>Fix:</strong> Navigate at the level of intent, not syntax.
-					</div>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={500}>
-				<div class="pitfall">
-					<div class="pitfall-header">
-						<h3>Scheduling</h3>
-						<span class="pitfall-severity low">manageable</span>
-					</div>
-					<p>Coordinating calendars is harder than sitting down alone.</p>
-					<div class="pitfall-solution">
-						<strong>Fix:</strong> Block dedicated time. Same slot every day.
-					</div>
-				</div>
-			</ScrollReveal>
+				</ScrollReveal>
+			{/each}
 		</div>
 	</div>
 </section>
@@ -645,106 +309,7 @@
 <!-- ============================================================ -->
 <!-- WHERE TO PAIR — ARCHITECTURE DIAGRAM                         -->
 <!-- ============================================================ -->
-<section class="complex-scroll" bind:this={complexWrapper}>
-	<div class="complex-sticky">
-		<div class="container">
-			<p class="label">Where It Matters</p>
-			<h2>Where to Pair Program</h2>
-
-			<div class="complex-stage">
-				<div style="opacity: {cpxAll};">
-					<svg class="arch-svg" viewBox="0 0 660 400">
-						<!-- ── Phase 1: Layer categorization boxes ── -->
-						<g style="opacity: {cpxLayers};">
-							<!-- Config -->
-							<rect x="230" y="5" width="200" height="52" rx="8" class="layer-box layer-config" />
-							<text x="330" y="27" class="layer-title">Config</text>
-							<text x="330" y="43" class="layer-sub">Architecture / Non-functional Req.</text>
-							<!-- UI -->
-							<rect x="230" y="78" width="200" height="48" rx="8" class="layer-box layer-ui" />
-							<text x="330" y="99" class="layer-title">UI</text>
-							<text x="330" y="113" class="layer-sub">Visual Requirements</text>
-							<!-- IO Service -->
-							<rect x="55" y="155" width="140" height="48" rx="8" class="layer-box layer-svc" />
-							<text x="125" y="176" class="layer-title">IO Service</text>
-							<text x="125" y="191" class="layer-sub">Data / Integration Req.</text>
-							<!-- Viewmodel -->
-							<rect x="260" y="155" width="140" height="48" rx="8" class="layer-box layer-svc" />
-							<text x="330" y="176" class="layer-title">Viewmodel</text>
-							<text x="330" y="191" class="layer-sub">UX Requirements</text>
-							<!-- DTOs -->
-							<rect x="465" y="155" width="140" height="48" rx="8" class="layer-box layer-svc" />
-							<text x="535" y="176" class="layer-title">DTOs</text>
-							<!-- Use Case -->
-							<rect x="230" y="235" width="200" height="48" rx="8" class="layer-box layer-uc" />
-							<text x="330" y="256" class="layer-title">Use Case</text>
-							<text x="330" y="271" class="layer-sub">User Requirements</text>
-							<!-- Domain -->
-							<rect x="230" y="318" width="200" height="48" rx="8" class="layer-box layer-domain" />
-							<text x="330" y="339" class="layer-title">Domain</text>
-							<text x="330" y="354" class="layer-sub">Glossary</text>
-						</g>
-
-						<!-- ── Connection lines (rendered BELOW nodes) ── -->
-						<g style="opacity: {cpxLines};">
-							{#each connections as c}
-								{@const f = nodeById(c.from)}
-								{@const t = nodeById(c.to)}
-								<line
-									x1={cx(f)} y1={cy(f)}
-									x2={cx(t)} y2={cy(t)}
-									class="cline"
-									class:cline-red={c.red && cpxRed > 0.5}
-								/>
-							{/each}
-						</g>
-
-						<!-- ── Class nodes (rendered ON TOP of lines) ── -->
-						<g style="opacity: {cpxNodes};">
-							{#each classNodes as n, i}
-								<g style="transform: translateY({(1 - cpxNodes) * 15}px); opacity: {Math.min(1, cpxNodes * 3 - i * 0.1)};">
-									<rect
-										x={n.x} y={n.y} width={n.w} height={26} rx={5}
-										class="cnode cnode-{n.layer}"
-										class:cnode-trigger={n.id === 'runProtocol' && cpxRed > 0.5}
-									/>
-									<text x={n.x + n.w / 2} y={n.y + 16} class="cnode-label">{n.label}</text>
-								</g>
-							{/each}
-						</g>
-
-						<!-- ── Change frequency arrow ── -->
-						<g style="opacity: {cpxArrow};">
-							<!-- Vertical line -->
-							<line x1="635" y1="370" x2="635" y2="25" stroke="#fb923c" stroke-width="2" />
-							<!-- Arrowhead pointing UP /\ -->
-							<path d="M625,25 L635,8 L645,25" fill="none" stroke="#fb923c" stroke-width="2" stroke-linejoin="round" />
-							<text x="650" y="200" class="arrow-label" transform="rotate(90, 650, 200)">More changes at the top</text>
-						</g>
-					</svg>
-
-					<!-- Impact text below SVG -->
-					{#if cpxRed > 0.3}
-						<p class="arch-impact" style="opacity: {cpxRed};">
-							When a user requirement changes, everything connected above it is affected.
-						</p>
-					{/if}
-				</div>
-
-				<!-- Conclusion (fades in as diagram fades out) -->
-				<div class="complex-end" style="opacity: {cpxEnd}; transform: translateY({(1 - cpxEnd) * 30}px);">
-					<p class="lead">
-						Pair program the parts that hurt most when they break &mdash; highly interconnected code that sits on top of <strong>changing requirements</strong>.
-					</p>
-					<div class="era-tag" style="margin-top: 1.5rem;">
-						<span class="era-dot"></span>
-						<p>The User login barely changes. But the lab handling chain? One new pipetting requirement and everything from Use Case to UI needs to adapt. That's where pairing pays off.</p>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-</section>
+<ArchitectureDiagram />
 
 <!-- ============================================================ -->
 <!-- PAIRING STYLES                                               -->
@@ -756,30 +321,16 @@
 			<h2>Pairing Styles</h2>
 		</ScrollReveal>
 		<div class="styles-list">
-			<ScrollReveal delay={200}>
-				<div class="card style-card">
-					<div class="style-number">01</div>
-					<h3>Driver–Navigator</h3>
-					<p class="style-tag">Classic</p>
-					<p>The standard approach. Clear roles, regular rotation. The driver codes, the navigator reviews and guides. Best for most development tasks.</p>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={350}>
-				<div class="card style-card">
-					<div class="style-number">02</div>
-					<h3>Ping-Pong Pairing</h3>
-					<p class="style-tag">Test-Driven</p>
-					<p>Used with TDD. Developer A writes a failing test. Developer B makes it pass, then writes the next failing test. Back and forth, building up the solution.</p>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={500}>
-				<div class="card style-card">
-					<div class="style-number">03</div>
-					<h3>Strong-Style Pairing</h3>
-					<p class="style-tag">Idea-Driven</p>
-					<p>"For an idea to go from your head into the computer, it must go through someone else's hands." The navigator has the ideas; the driver just types. Great for mentoring.</p>
-				</div>
-			</ScrollReveal>
+			{#each pairingStyles as style, i}
+				<ScrollReveal delay={i * 150 + 200}>
+					<div class="card style-card">
+						<div class="style-number">{String(i + 1).padStart(2, '0')}</div>
+						<h3>{style.title}</h3>
+						<p class="style-tag">{style.tag}</p>
+						<p>{style.description}</p>
+					</div>
+				</ScrollReveal>
+			{/each}
 		</div>
 	</div>
 </section>
@@ -794,44 +345,18 @@
 			<h2>When to Pair</h2>
 		</ScrollReveal>
 		<div class="when-grid">
-			<ScrollReveal delay={100}>
-				<div class="card when-card when-always">
-					<h3>Always</h3>
-					<ul>
-						<li>Security-critical code</li>
-						<li>Payment &amp; financial logic</li>
-						<li>Core business rules</li>
-						<li>Shared libraries &amp; utilities</li>
-						<li>Architecture decisions</li>
-						<li>Onboarding new team members</li>
-					</ul>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={250}>
-				<div class="card when-card when-consider">
-					<h3>Consider</h3>
-					<ul>
-						<li>Unfamiliar technology</li>
-						<li>Complex bug fixes</li>
-						<li>Performance-critical code</li>
-						<li>Tricky edge cases</li>
-						<li>When you're stuck</li>
-						<li>Legacy code changes</li>
-					</ul>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={400}>
-				<div class="card when-card when-skip">
-					<h3>Skip</h3>
-					<ul>
-						<li>Simple, routine changes</li>
-						<li>Well-understood features</li>
-						<li>Isolated components</li>
-						<li>Exploratory / spike work</li>
-						<li>When you need deep focus time</li>
-					</ul>
-				</div>
-			</ScrollReveal>
+			{#each whenColumns as col, i}
+				<ScrollReveal delay={i * 150 + 100}>
+					<div class="card when-card {col.variant}">
+						<h3>{col.title}</h3>
+						<ul>
+							{#each col.items as item}
+								<li>{@html item}</li>
+							{/each}
+						</ul>
+					</div>
+				</ScrollReveal>
+			{/each}
 		</div>
 	</div>
 </section>
@@ -846,51 +371,17 @@
 			<h2>Session Structure</h2>
 		</ScrollReveal>
 		<div class="session-steps">
-			<ScrollReveal delay={100}>
-				<div class="session-step">
-					<span class="session-step-num">1</span>
-					<div>
-						<h3>Align</h3>
-						<p>Agree on the goal. What are we building this session?</p>
+			{#each sessionSteps as step, i}
+				<ScrollReveal delay={(i + 1) * 100}>
+					<div class="session-step">
+						<span class="session-step-num">{i + 1}</span>
+						<div>
+							<h3>{step.title}</h3>
+							<p>{step.description}</p>
+						</div>
 					</div>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={200}>
-				<div class="session-step">
-					<span class="session-step-num">2</span>
-					<div>
-						<h3>Code</h3>
-						<p>Driver codes, Navigator reviews. Think out loud.</p>
-					</div>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={300}>
-				<div class="session-step">
-					<span class="session-step-num">3</span>
-					<div>
-						<h3>Switch</h3>
-						<p>Rotate roles every 15–25 minutes. Use a timer.</p>
-					</div>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={400}>
-				<div class="session-step">
-					<span class="session-step-num">4</span>
-					<div>
-						<h3>Break</h3>
-						<p>Step away together every hour. Pairing is intense.</p>
-					</div>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={500}>
-				<div class="session-step">
-					<span class="session-step-num">5</span>
-					<div>
-						<h3>Recap</h3>
-						<p>What did we accomplish? What's next? 2 minutes.</p>
-					</div>
-				</div>
-			</ScrollReveal>
+				</ScrollReveal>
+			{/each}
 		</div>
 	</div>
 </section>
@@ -898,123 +389,7 @@
 <!-- ============================================================ -->
 <!-- PRACTICAL EXAMPLE                                            -->
 <!-- ============================================================ -->
-<section class="section">
-	<div class="container">
-		<ScrollReveal>
-			<p class="label">In Practice</p>
-			<h2>A Real Example</h2>
-		</ScrollReveal>
-		<ScrollReveal delay={100}>
-			<p class="lead">Let's walk through a pairing session: building a login form together.</p>
-		</ScrollReveal>
-
-		<div class="timeline">
-			<ScrollReveal delay={200}>
-				<div class="timeline-item">
-					<div class="timeline-time">0:00</div>
-					<div class="timeline-content">
-						<h3>Agree on the task</h3>
-						<div class="dialogue">
-							<div class="dialogue-line both">
-								<span class="speaker">Both</span>
-								<p>"Let's build the login form. We need email input, password field, validation, and error handling."</p>
-							</div>
-						</div>
-					</div>
-				</div>
-			</ScrollReveal>
-
-			<ScrollReveal delay={300}>
-				<div class="timeline-item">
-					<div class="timeline-time">0:02</div>
-					<div class="timeline-content">
-						<h3>Driver starts, Navigator guides</h3>
-						<div class="dialogue">
-							<div class="dialogue-line navigator-line">
-								<span class="speaker nav">Navigator</span>
-								<p>"Don't forget the aria-label for accessibility on the input fields."</p>
-							</div>
-							<div class="dialogue-line driver-line">
-								<span class="speaker drv">Driver</span>
-								<p>"Good catch — adding it now."</p>
-							</div>
-						</div>
-						<div class="timeline-insight">
-							Catch #1 — Accessibility issue prevented before it existed.
-						</div>
-					</div>
-				</div>
-			</ScrollReveal>
-
-			<ScrollReveal delay={400}>
-				<div class="timeline-item">
-					<div class="timeline-time">0:10</div>
-					<div class="timeline-content">
-						<h3>Navigator spots a performance issue</h3>
-						<div class="dialogue">
-							<div class="dialogue-line navigator-line">
-								<span class="speaker nav">Navigator</span>
-								<p>"We should debounce the email validation — otherwise it fires on every keystroke."</p>
-							</div>
-							<div class="dialogue-line driver-line">
-								<span class="speaker drv">Driver</span>
-								<p>"Right, that would hammer the API. Let me add a 300ms debounce."</p>
-							</div>
-						</div>
-						<div class="timeline-insight">
-							Catch #2 — Performance issue caught before reaching production.
-						</div>
-					</div>
-				</div>
-			</ScrollReveal>
-
-			<ScrollReveal delay={500}>
-				<div class="timeline-item switch">
-					<div class="timeline-time">0:25</div>
-					<div class="timeline-content">
-						<h3>Role switch</h3>
-						<p class="switch-text">Pomodoro timer rings. Driver becomes Navigator. Navigator becomes Driver.</p>
-					</div>
-				</div>
-			</ScrollReveal>
-
-			<ScrollReveal delay={600}>
-				<div class="timeline-item">
-					<div class="timeline-time">0:27</div>
-					<div class="timeline-content">
-						<h3>New Driver adds error handling</h3>
-						<div class="dialogue">
-							<div class="dialogue-line navigator-line">
-								<span class="speaker nav">New Navigator</span>
-								<p>"What happens if the API returns a 429? We need rate-limit handling."</p>
-							</div>
-							<div class="dialogue-line driver-line">
-								<span class="speaker drv">New Driver</span>
-								<p>"I wouldn't have thought of that solo. Adding a retry with backoff."</p>
-							</div>
-						</div>
-						<div class="timeline-insight">
-							Catch #3 — Edge case handled that would have been missed alone.
-						</div>
-					</div>
-				</div>
-			</ScrollReveal>
-
-			<ScrollReveal delay={700}>
-				<div class="timeline-item done">
-					<div class="timeline-time">0:45</div>
-					<div class="timeline-content">
-						<h3>Done</h3>
-						<p>Login form completed with accessibility, debounced validation, and rate-limit handling — <strong>built in 45 minutes with zero bugs in review</strong>.</p>
-						<div class="result-callout">
-							The navigator caught <strong>3 issues</strong> that would have been missed in solo development. Total review comments on the PR: <strong>0</strong>.
-						</div>
-					</div>
-				</div>
-			</ScrollReveal>
-		</div>
-	</div>
-</section>
+<PracticalExample />
 
 <!-- ============================================================ -->
 <!-- ACT IV — MODERN CONTEXT                                      -->
@@ -1041,27 +416,15 @@
 		</ScrollReveal>
 
 		<div class="objections">
-			<ScrollReveal delay={250}>
-				<div class="objection">
-					<div class="objection-quote">
-						<p>"Why would I work on a feature with Jonathan? He's in a meeting, I have time — with a snap of my fingers it's done."</p>
+			{#each modernObjections as obj, i}
+				<ScrollReveal delay={i * 150 + 250}>
+					<div class="objection">
+						<div class="objection-quote">
+							<p>{obj.quote}</p>
+						</div>
 					</div>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={400}>
-				<div class="objection">
-					<div class="objection-quote">
-						<p>"That really costs a lot of time — waiting for the other person, spending energy to engage with them."</p>
-					</div>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={550}>
-				<div class="objection">
-					<div class="objection-quote">
-						<p>"Why would I even want to know how it works in detail if the AI just conjures it up for me?"</p>
-					</div>
-				</div>
-			</ScrollReveal>
+				</ScrollReveal>
+			{/each}
 		</div>
 
 		<ScrollReveal delay={700}>
@@ -1072,22 +435,12 @@
 
 		<ScrollReveal delay={850}>
 			<div class="answers">
-				<div class="answer">
-					<h3>AI generates code. Not understanding.</h3>
-					<p>When the system breaks at 2 AM, you need someone who <em>understands</em> the code. Pairing builds that in two people at once.</p>
-				</div>
-				<div class="answer">
-					<h3>Speed isn't the bottleneck.</h3>
-					<p>Fast in the wrong direction is just expensive. A navigator catches wrong turns early.</p>
-				</div>
-				<div class="answer">
-					<h3>Solo + AI = knowledge silos.</h3>
-					<p>Everyone grabs their task, AI handles it, nobody understands anyone else's code. Bus factor drops to one.</p>
-				</div>
-				<div class="answer">
-					<h3>Some problems need two humans.</h3>
-					<p>Architecture. Security. Domain logic. The kind of work where someone needs to say "wait, that doesn't make sense."</p>
-				</div>
+				{#each aiAnswers as a}
+					<div class="answer">
+						<h3>{a.title}</h3>
+						<p>{@html a.description}</p>
+					</div>
+				{/each}
 			</div>
 		</ScrollReveal>
 
@@ -1301,78 +654,17 @@
 			<h2>Best Practices</h2>
 		</ScrollReveal>
 		<div class="tips-grid">
-			<ScrollReveal delay={100}>
-				<div class="tip">
-					<span class="tip-num">01</span>
-					<div>
-						<h3>Start with a clear goal</h3>
-						<p>Agree on what you're building before touching the keyboard.</p>
+			{#each bestPractices as bp, i}
+				<ScrollReveal delay={i * 50 + 100}>
+					<div class="tip">
+						<span class="tip-num">{String(i + 1).padStart(2, '0')}</span>
+						<div>
+							<h3>{bp.title}</h3>
+							<p>{bp.description}</p>
+						</div>
 					</div>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={150}>
-				<div class="tip">
-					<span class="tip-num">02</span>
-					<div>
-						<h3>Switch roles regularly</h3>
-						<p>Every 15–25 minutes. Use a timer so you don't forget.</p>
-					</div>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={200}>
-				<div class="tip">
-					<span class="tip-num">03</span>
-					<div>
-						<h3>Take breaks</h3>
-						<p>Pairing is intense. Step away every hour. Walk, stretch, hydrate.</p>
-					</div>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={250}>
-				<div class="tip">
-					<span class="tip-num">04</span>
-					<div>
-						<h3>Think out loud</h3>
-						<p>Narrate your reasoning. "I'm adding this check because..." — it invites feedback.</p>
-					</div>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={300}>
-				<div class="tip">
-					<span class="tip-num">05</span>
-					<div>
-						<h3>Be patient</h3>
-						<p>Different skill levels are fine. Pairing is a learning opportunity for both.</p>
-					</div>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={350}>
-				<div class="tip">
-					<span class="tip-num">06</span>
-					<div>
-						<h3>Don't pair on everything</h3>
-						<p>Save pairing for complex, critical, or learning tasks. Routine work can be solo.</p>
-					</div>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={400}>
-				<div class="tip">
-					<span class="tip-num">07</span>
-					<div>
-						<h3>Rotate partners</h3>
-						<p>Don't always pair with the same person. Cross-pollinate knowledge across the team.</p>
-					</div>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={450}>
-				<div class="tip">
-					<span class="tip-num">08</span>
-					<div>
-						<h3>Retrospect</h3>
-						<p>After each session, take 2 minutes: what worked? What didn't? Adjust next time.</p>
-					</div>
-				</div>
-			</ScrollReveal>
+				</ScrollReveal>
+			{/each}
 		</div>
 	</div>
 </section>
@@ -1389,50 +681,12 @@
 
 		<ScrollReveal delay={150}>
 			<div class="summary-grid">
-				<div class="summary-card">
-					<h3>What</h3>
-					<p>Two developers, one workstation. Driver codes, Navigator reviews. Switch regularly.</p>
-				</div>
-				<div class="summary-card">
-					<h3>Why</h3>
-					<p>Fewer bugs, better design, knowledge transfer, shared ownership, real-time review.</p>
-				</div>
-				<div class="summary-card">
-					<h3>How</h3>
-					<p>Driver–Navigator, Ping-Pong, or Strong-Style. Use a timer. 15–25 min rotations.</p>
-				</div>
-				<div class="summary-card">
-					<h3>When</h3>
-					<p>Always: security, payments, core logic, onboarding. Skip: routine, isolated, exploratory.</p>
-				</div>
-				<div class="summary-card">
-					<h3>Session</h3>
-					<p>Align on goal, code together, switch roles, break hourly, recap at the end.</p>
-				</div>
-				<div class="summary-card">
-					<h3>Watch Out</h3>
-					<p>Fatigue, personality clashes, disengaged navigators, backseat driving.</p>
-				</div>
-				<div class="summary-card">
-					<h3>Safety</h3>
-					<p>Pairing requires vulnerability. Build psychological safety first — normalise not-knowing, start low-stakes, celebrate mistakes.</p>
-				</div>
-				<div class="summary-card">
-					<h3>AI</h3>
-					<p>Use AI for boilerplate and prototyping. Use human pairs for architecture, security, and shared understanding.</p>
-				</div>
-				<div class="summary-card">
-					<h3>The Human Problem</h3>
-					<p>Most teams don't pair because it feels unsafe, not because it doesn't work. Fix the culture, then the process.</p>
-				</div>
-				<div class="summary-card">
-					<h3>Remote</h3>
-					<p>VS Code Live Share, good audio, over-communicate, driver's cursor, more breaks.</p>
-				</div>
-				<div class="summary-card">
-					<h3>Mob</h3>
-					<p>Whole team, one screen. One driver, many navigators. Rotate every 10–15 min.</p>
-				</div>
+				{#each summaryCards as card}
+					<div class="summary-card">
+						<h3>{card.title}</h3>
+						<p>{card.description}</p>
+					</div>
+				{/each}
 			</div>
 		</ScrollReveal>
 
@@ -1455,69 +709,15 @@
 		</ScrollReveal>
 		<ScrollReveal delay={150}>
 			<div class="sources-list">
-				<div class="source">
-					<span class="source-num">1</span>
-					<div>
-						<a href="https://www.amazon.com/Pair-Programming-Illuminated-Laurie-Williams/dp/0201745763" target="_blank" rel="noopener" class="source-title">Pair Programming Illuminated</a>
-						<p class="source-meta">Williams, L. &amp; Kessler, R. (2002). Addison-Wesley Professional.</p>
+				{#each sources as src, i}
+					<div class="source">
+						<span class="source-num">{i + 1}</span>
+						<div>
+							<a href={src.url} target="_blank" rel="noopener" class="source-title">{src.title}</a>
+							<p class="source-meta">{@html src.meta}</p>
+						</div>
 					</div>
-				</div>
-				<div class="source">
-					<span class="source-num">2</span>
-					<div>
-						<a href="https://collaboration.csc.ncsu.edu/laurie/Papers/XPSardinia.PDF" target="_blank" rel="noopener" class="source-title">The Costs and Benefits of Pair Programming</a>
-						<p class="source-meta">Cockburn, A. &amp; Williams, L. (2000). Proceedings of the First International Conference on Extreme Programming (XP2000).</p>
-					</div>
-				</div>
-				<div class="source">
-					<span class="source-num">3</span>
-					<div>
-						<a href="https://www.amazon.com/Extreme-Programming-Explained-Embrace-Change/dp/0321278658" target="_blank" rel="noopener" class="source-title">Extreme Programming Explained: Embrace Change</a>
-						<p class="source-meta">Beck, K. (1999, 2nd ed. 2004). Addison-Wesley Professional.</p>
-					</div>
-				</div>
-				<div class="source">
-					<span class="source-num">4</span>
-					<div>
-						<a href="https://www.researchgate.net/publication/222408325_The_effectiveness_of_pair_programming_A_meta-analysis" target="_blank" rel="noopener" class="source-title">The Effectiveness of Pair Programming: A Meta-Analysis</a>
-						<p class="source-meta">Hannay, J.E., Dyb&aring;, T., Arisholm, E. &amp; Sj&oslash;berg, D.I.K. (2009). Information and Software Technology, 51(7), 1110-1122.</p>
-					</div>
-				</div>
-				<div class="source">
-					<span class="source-num">5</span>
-					<div>
-						<a href="https://www.amazon.com/Software-Teaming-Programming-Whole-Team-Approach/dp/B0BLG1QTYK" target="_blank" rel="noopener" class="source-title">Software Teaming: A Mob Programming, Whole-Team Approach</a>
-						<p class="source-meta">Zuill, W. &amp; Meadows, K. (2022, 2nd ed.). Originally published on Leanpub (2016).</p>
-					</div>
-				</div>
-				<div class="source">
-					<span class="source-num">6</span>
-					<div>
-						<a href="https://martinfowler.com/articles/on-pair-programming.html" target="_blank" rel="noopener" class="source-title">On Pair Programming</a>
-						<p class="source-meta">Holdschick, B. &amp; Fowler, M. (2020). martinfowler.com.</p>
-					</div>
-				</div>
-				<div class="source">
-					<span class="source-num">7</span>
-					<div>
-						<a href="https://ieeexplore.ieee.org/document/1667588" target="_blank" rel="noopener" class="source-title">Promiscuous Pairing and Beginner's Mind</a>
-						<p class="source-meta">Belshee, A. (2005). Agile Development Conference (ADC'05), IEEE.</p>
-					</div>
-				</div>
-				<div class="source">
-					<span class="source-num">8</span>
-					<div>
-						<a href="https://www.amazon.com/Fearless-Organization-Psychological-Workplace-Innovation/dp/1119477247" target="_blank" rel="noopener" class="source-title">The Fearless Organization: Creating Psychological Safety in the Workplace</a>
-						<p class="source-meta">Edmondson, A.C. (2018). Wiley.</p>
-					</div>
-				</div>
-				<div class="source">
-					<span class="source-num">9</span>
-					<div>
-						<a href="https://rework.withgoogle.com/guides/understanding-team-effectiveness/" target="_blank" rel="noopener" class="source-title">Project Aristotle: Understanding Team Effectiveness</a>
-						<p class="source-meta">Google re:Work (2015). Psychological safety as the #1 factor in high-performing teams.</p>
-					</div>
-				</div>
+				{/each}
 			</div>
 		</ScrollReveal>
 	</div>
@@ -1547,103 +747,6 @@
 <!-- STYLES                                                       -->
 <!-- ============================================================ -->
 <style>
-	/* ── Base Section Styles ─────────────────────────────────── */
-	.section {
-		padding: clamp(5rem, 12vh, 9rem) clamp(1.5rem, 5vw, 3rem);
-	}
-
-	.section-alt {
-		background: var(--bg-secondary);
-	}
-
-	.container {
-		max-width: var(--max-width);
-		margin: 0 auto;
-	}
-
-	.label {
-		font-size: 0.8rem;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.15em;
-		color: var(--accent);
-		margin-bottom: 0.75rem;
-	}
-
-	h2 {
-		font-size: clamp(2rem, 5vw, 3.2rem);
-		font-weight: 700;
-		line-height: 1.15;
-		margin-bottom: 2rem;
-		letter-spacing: -0.03em;
-	}
-
-	h3 {
-		font-size: 1.15rem;
-		font-weight: 600;
-		margin-bottom: 0.5rem;
-	}
-
-	.lead {
-		font-size: clamp(1.15rem, 2.5vw, 1.4rem);
-		color: var(--text-secondary);
-		line-height: 1.6;
-		max-width: 650px;
-		margin-bottom: 1.5rem;
-	}
-
-	.body {
-		color: var(--text-secondary);
-		max-width: 650px;
-		margin-bottom: 2rem;
-	}
-
-	.body strong {
-		color: var(--text-primary);
-	}
-
-	.card {
-		background: var(--bg-card);
-		border: 1px solid var(--border);
-		border-radius: var(--radius);
-		padding: 2rem;
-		transition: background 0.3s, border-color 0.3s;
-	}
-
-	.card:hover {
-		background: var(--bg-card-hover);
-		border-color: var(--border-bright);
-	}
-
-	.card ul,
-	.card ol {
-		list-style: none;
-		padding: 0;
-	}
-
-	.card li {
-		position: relative;
-		padding-left: 1.2rem;
-		margin-bottom: 0.6rem;
-		color: var(--text-secondary);
-		font-size: 0.95rem;
-	}
-
-	.card li::before {
-		content: '';
-		position: absolute;
-		left: 0;
-		top: 0.65em;
-		width: 5px;
-		height: 5px;
-		border-radius: 50%;
-		background: var(--accent);
-	}
-
-	.card li strong {
-		color: var(--text-primary);
-	}
-
 	/* ── Hero ────────────────────────────────────────────────── */
 	.hero {
 		position: relative;
@@ -1865,33 +968,6 @@
 		color: white;
 	}
 
-	.callout {
-		display: flex;
-		align-items: flex-start;
-		gap: 1rem;
-		padding: 1.5rem 2rem;
-		background: rgba(129, 140, 248, 0.06);
-		border: 1px solid rgba(129, 140, 248, 0.15);
-		border-radius: var(--radius);
-		margin-top: 1rem;
-	}
-
-	.callout-icon {
-		font-size: 1.5rem;
-		color: var(--accent);
-		flex-shrink: 0;
-		line-height: 1.6;
-	}
-
-	.callout p {
-		color: var(--text-secondary);
-		font-size: 0.95rem;
-	}
-
-	.callout strong {
-		color: var(--text-primary);
-	}
-
 	/* ── Benefits Grid ───────────────────────────────────────── */
 	.benefits-grid {
 		display: grid;
@@ -2111,138 +1187,6 @@
 		font-size: 0.95rem;
 	}
 
-	/* ── Timeline / Practical Example ────────────────────────── */
-	.timeline {
-		position: relative;
-		margin-top: 2rem;
-		padding-left: 2rem;
-	}
-
-	.timeline::before {
-		content: '';
-		position: absolute;
-		left: 0;
-		top: 0;
-		bottom: 0;
-		width: 2px;
-		background: linear-gradient(to bottom, var(--accent), var(--border), var(--accent));
-		border-radius: 1px;
-	}
-
-	.timeline-item {
-		position: relative;
-		padding: 0 0 2.5rem 2rem;
-	}
-
-	.timeline-item::before {
-		content: '';
-		position: absolute;
-		left: -2rem;
-		top: 0.4rem;
-		width: 10px;
-		height: 10px;
-		border-radius: 50%;
-		background: var(--accent);
-		border: 2px solid var(--bg-secondary);
-		transform: translateX(-4px);
-	}
-
-	.timeline-item.switch::before {
-		background: #facc15;
-		box-shadow: 0 0 12px rgba(250, 204, 21, 0.4);
-	}
-
-	.timeline-item.done::before {
-		background: #34d399;
-		box-shadow: 0 0 12px rgba(52, 211, 153, 0.4);
-	}
-
-	.timeline-time {
-		font-size: 0.75rem;
-		font-weight: 600;
-		color: var(--accent);
-		letter-spacing: 0.05em;
-		font-variant-numeric: tabular-nums;
-		margin-bottom: 0.3rem;
-	}
-
-	.timeline-content h3 {
-		font-size: 1.05rem;
-		margin-bottom: 0.75rem;
-	}
-
-	.switch-text {
-		color: #facc15;
-		font-weight: 500;
-		font-size: 0.95rem;
-	}
-
-	.dialogue {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-		margin-bottom: 0.75rem;
-	}
-
-	.dialogue-line {
-		padding: 0.75rem 1rem;
-		border-radius: var(--radius-sm);
-		background: var(--bg-card);
-		border: 1px solid var(--border);
-	}
-
-	.dialogue-line p {
-		font-size: 0.9rem;
-		color: var(--text-secondary);
-		font-style: italic;
-	}
-
-	.speaker {
-		font-size: 0.7rem;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		margin-bottom: 0.2rem;
-		display: block;
-	}
-
-	.speaker.nav {
-		color: #c084fc;
-	}
-
-	.speaker.drv {
-		color: #818cf8;
-	}
-
-	.timeline-insight {
-		font-size: 0.85rem;
-		font-weight: 500;
-		color: #34d399;
-		padding: 0.5rem 0;
-	}
-
-	.result-callout {
-		margin-top: 1rem;
-		padding: 1rem 1.25rem;
-		background: rgba(52, 211, 153, 0.06);
-		border: 1px solid rgba(52, 211, 153, 0.15);
-		border-radius: var(--radius-sm);
-		font-size: 0.95rem;
-		color: var(--text-secondary);
-	}
-
-	.result-callout strong {
-		color: #34d399;
-	}
-
-	.timeline-item.done p {
-		color: var(--text-secondary);
-	}
-
-	.timeline-item.done p strong {
-		color: #34d399;
-	}
-
 	/* ── Mob Programming ─────────────────────────────────────── */
 	.mob-visual {
 		display: flex;
@@ -2356,54 +1300,6 @@
 		color: var(--text-primary);
 	}
 
-	/* ── Tips ────────────────────────────────────────────────── */
-	.tips-grid {
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-		margin-top: 1rem;
-	}
-
-	.tip {
-		display: flex;
-		align-items: flex-start;
-		gap: 1.25rem;
-		padding: 1.25rem 1.5rem;
-		background: var(--bg-card);
-		border: 1px solid var(--border);
-		border-radius: var(--radius-sm);
-		transition: border-color 0.3s;
-	}
-
-	.tip:hover {
-		border-color: var(--border-bright);
-	}
-
-	.tip-num {
-		font-size: 0.85rem;
-		font-weight: 700;
-		color: var(--accent);
-		flex-shrink: 0;
-		width: 28px;
-		height: 28px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: rgba(129, 140, 248, 0.1);
-		border-radius: 6px;
-		font-variant-numeric: tabular-nums;
-	}
-
-	.tip h3 {
-		font-size: 1rem;
-		margin-bottom: 0.2rem;
-	}
-
-	.tip p {
-		font-size: 0.9rem;
-		color: var(--text-secondary);
-	}
-
 	/* ── Summary ─────────────────────────────────────────────── */
 	.summary-grid {
 		display: grid;
@@ -2449,30 +1345,6 @@
 		font-size: 0.9rem;
 		color: var(--text-secondary);
 		line-height: 1.6;
-	}
-
-	.key-takeaway {
-		text-align: center;
-		padding: 3rem 2rem;
-		background: rgba(129, 140, 248, 0.04);
-		border: 1px solid rgba(129, 140, 248, 0.12);
-		border-radius: var(--radius);
-	}
-
-	.key-takeaway p {
-		font-size: clamp(1rem, 2vw, 1.2rem);
-		color: var(--text-secondary);
-		line-height: 1.8;
-		max-width: 600px;
-		margin: 0 auto;
-	}
-
-	.key-takeaway strong {
-		color: var(--text-primary);
-		background: var(--gradient-text);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
 	}
 
 	/* ── Sources ──────────────────────────────────────────────── */
@@ -2528,123 +1400,6 @@
 		font-size: 0.85rem;
 		color: var(--text-muted);
 		line-height: 1.5;
-	}
-
-	/* ── Origin Scroll Section ──────────────────────────────── */
-	.origin-scroll {
-		position: relative;
-		height: 500vh;
-	}
-
-	.origin-sticky {
-		position: sticky;
-		top: 0;
-		height: 100vh;
-		display: flex;
-		align-items: center;
-		padding: 4rem 0;
-	}
-
-	.origin-sticky > .container {
-		width: 100%;
-	}
-
-	.origin-stage {
-		position: relative;
-		margin-top: 2rem;
-		min-height: 350px;
-	}
-
-	.origin-phase {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		will-change: opacity, transform;
-	}
-
-	.origin-portraits {
-		display: grid;
-		grid-template-columns: repeat(4, 1fr);
-		gap: 2rem;
-	}
-
-	.origin-portrait {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.75rem;
-	}
-
-	.origin-portrait img {
-		width: 100%;
-		max-width: 180px;
-		aspect-ratio: 1;
-		object-fit: cover;
-		border-radius: var(--radius);
-		border: 1px solid var(--border);
-		filter: grayscale(0.3);
-	}
-
-	.origin-portrait span {
-		font-size: 0.95rem;
-		font-weight: 600;
-		color: var(--text-secondary);
-	}
-
-	.origin-bullets {
-		list-style: none;
-		padding: 0;
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-	}
-
-	.origin-bullets li {
-		padding: 0.75rem 1rem;
-		background: var(--surface);
-		border: 1px solid var(--border);
-		border-radius: var(--radius-sm);
-		color: var(--text-secondary);
-		font-size: 1rem;
-		line-height: 1.6;
-	}
-
-	@media (max-width: 768px) {
-		.origin-portraits {
-			grid-template-columns: repeat(2, 1fr);
-			gap: 1.5rem;
-		}
-
-		.origin-portrait img {
-			max-width: 140px;
-		}
-	}
-
-	/* ── Era Tag (History Section) ───────────────────────────── */
-	.era-tag {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
-		padding: 1.25rem 1.5rem;
-		background: rgba(251, 146, 60, 0.05);
-		border: 1px solid rgba(251, 146, 60, 0.15);
-		border-radius: var(--radius);
-		margin-top: 1rem;
-	}
-
-	.era-dot {
-		width: 10px;
-		height: 10px;
-		border-radius: 50%;
-		background: #fb923c;
-		flex-shrink: 0;
-		box-shadow: 0 0 12px rgba(251, 146, 60, 0.4);
-	}
-
-	.era-tag p {
-		color: var(--text-secondary);
-		font-size: 0.95rem;
 	}
 
 	/* ── 2026 Question Section ───────────────────────────────── */
@@ -2855,135 +1610,4 @@
 		border-top: 1px solid var(--border);
 	}
 
-	/* ── Where to Pair — Architecture Scroll Section ─────── */
-	.complex-scroll {
-		position: relative;
-		height: 700vh;
-	}
-
-	.complex-sticky {
-		position: sticky;
-		top: 0;
-		height: 100vh;
-		display: flex;
-		align-items: center;
-		padding: 4rem 0;
-	}
-
-	.complex-sticky > .container {
-		width: 100%;
-	}
-
-	.complex-stage {
-		position: relative;
-		margin-top: 1.5rem;
-	}
-
-	.complex-end {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		text-align: center;
-		will-change: opacity, transform;
-	}
-
-	/* ── SVG Diagram ───────────────────────────────────────── */
-	.arch-svg {
-		width: 100%;
-		max-width: 700px;
-		margin: 0 auto;
-		display: block;
-		overflow: visible;
-	}
-
-	/* ── Phase 1: Layer boxes ──────────────────────────────── */
-	.layer-box { stroke-width: 1.5; }
-	.layer-config { fill: rgba(244, 63, 94, 0.25); stroke: rgba(244, 63, 94, 0.6); }
-	.layer-ui { fill: rgba(236, 72, 153, 0.25); stroke: rgba(236, 72, 153, 0.6); }
-	.layer-svc { fill: rgba(234, 179, 8, 0.25); stroke: rgba(234, 179, 8, 0.6); }
-	.layer-uc { fill: rgba(96, 165, 250, 0.25); stroke: rgba(96, 165, 250, 0.6); }
-	.layer-domain { fill: rgba(74, 222, 128, 0.25); stroke: rgba(74, 222, 128, 0.6); }
-
-	.layer-title {
-		fill: #ffffff;
-		font-size: 13px;
-		font-weight: 700;
-		text-anchor: middle;
-		dominant-baseline: middle;
-	}
-
-	.layer-sub {
-		fill: #a1a1aa;
-		font-size: 9px;
-		text-anchor: middle;
-		dominant-baseline: middle;
-	}
-
-	/* ── Phase 2: Class nodes ──────────────────────────────── */
-	.cnode { stroke-width: 1.5; }
-	.cnode-config { fill: #1f0a10; stroke: rgba(244, 63, 94, 0.7); }
-	.cnode-ui { fill: #1f0a16; stroke: rgba(236, 72, 153, 0.7); }
-	.cnode-svc { fill: #1a1708; stroke: rgba(234, 179, 8, 0.7); }
-	.cnode-uc { fill: #0a1220; stroke: rgba(96, 165, 250, 0.7); }
-	.cnode-domain { fill: #0a1a0e; stroke: rgba(74, 222, 128, 0.7); }
-
-	.cnode-label {
-		fill: #fafafa;
-		font-size: 10px;
-		font-weight: 600;
-		text-anchor: middle;
-		dominant-baseline: middle;
-		pointer-events: none;
-	}
-
-	/* ── Connection lines ──────────────────────────────────── */
-	.cline {
-		stroke: rgba(255, 255, 255, 0.12);
-		stroke-width: 1;
-		stroke-linecap: round;
-		transition: stroke 0.6s, stroke-width 0.6s, filter 0.6s;
-	}
-
-	.cline-red {
-		stroke: #f43f5e;
-		stroke-width: 1.5;
-		filter: drop-shadow(0 0 4px rgba(244, 63, 94, 0.4));
-	}
-
-	/* ── Red highlights ────────────────────────────────────── */
-	.cnode-trigger {
-		stroke: #f43f5e !important;
-		stroke-width: 2 !important;
-		filter: drop-shadow(0 0 8px rgba(244, 63, 94, 0.5));
-		animation: svg-pulse 2s ease-in-out infinite;
-	}
-
-	.cnode-affected {
-		stroke: rgba(244, 63, 94, 0.6) !important;
-		filter: drop-shadow(0 0 4px rgba(244, 63, 94, 0.25));
-	}
-
-	@keyframes svg-pulse {
-		0%, 100% { filter: drop-shadow(0 0 8px rgba(244, 63, 94, 0.4)); }
-		50% { filter: drop-shadow(0 0 16px rgba(244, 63, 94, 0.7)); }
-	}
-
-	/* ── Arrow label ───────────────────────────────────────── */
-	.arrow-label {
-		fill: #fb923c;
-		font-size: 10px;
-		font-weight: 600;
-		text-anchor: middle;
-		dominant-baseline: middle;
-	}
-
-	/* ── Impact text ───────────────────────────────────────── */
-	.arch-impact {
-		text-align: center;
-		margin-top: 1rem;
-		font-size: 0.95rem;
-		color: #f43f5e;
-		font-weight: 600;
-	}
 </style>

@@ -65,6 +65,232 @@ a:hover {
 	transition: width 0.1s linear;
 }
 
+/* ── Design System: Layout ────────────────────────────────── */
+.section {
+	padding: clamp(5rem, 12vh, 9rem) clamp(1.5rem, 5vw, 3rem);
+}
+
+.section-alt {
+	background: var(--bg-secondary);
+}
+
+.container {
+	max-width: var(--max-width);
+	margin: 0 auto;
+}
+
+/* ── Design System: Typography ───────────────────────────── */
+.label {
+	font-size: 0.8rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.15em;
+	color: var(--accent);
+	margin-bottom: 0.75rem;
+}
+
+h2 {
+	font-size: clamp(2rem, 5vw, 3.2rem);
+	font-weight: 700;
+	line-height: 1.15;
+	margin-bottom: 2rem;
+	letter-spacing: -0.03em;
+}
+
+h3 {
+	font-size: 1.15rem;
+	font-weight: 600;
+	margin-bottom: 0.5rem;
+}
+
+.lead {
+	font-size: clamp(1.15rem, 2.5vw, 1.4rem);
+	color: var(--text-secondary);
+	line-height: 1.6;
+	max-width: 650px;
+	margin-bottom: 1.5rem;
+}
+
+.body {
+	color: var(--text-secondary);
+	max-width: 650px;
+	margin-bottom: 2rem;
+}
+
+.body strong {
+	color: var(--text-primary);
+}
+
+/* ── Design System: Card ─────────────────────────────────── */
+.card {
+	background: var(--bg-card);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	padding: 2rem;
+	transition: background 0.3s, border-color 0.3s;
+}
+
+.card:hover {
+	background: var(--bg-card-hover);
+	border-color: var(--border-bright);
+}
+
+.card ul,
+.card ol {
+	list-style: none;
+	padding: 0;
+}
+
+.card li {
+	position: relative;
+	padding-left: 1.2rem;
+	margin-bottom: 0.6rem;
+	color: var(--text-secondary);
+	font-size: 0.95rem;
+}
+
+.card li::before {
+	content: '';
+	position: absolute;
+	left: 0;
+	top: 0.65em;
+	width: 5px;
+	height: 5px;
+	border-radius: 50%;
+	background: var(--accent);
+}
+
+.card li strong {
+	color: var(--text-primary);
+}
+
+/* ── Design System: Callout ──────────────────────────────── */
+.callout {
+	display: flex;
+	align-items: flex-start;
+	gap: 1rem;
+	padding: 1.5rem 2rem;
+	background: rgba(129, 140, 248, 0.06);
+	border: 1px solid rgba(129, 140, 248, 0.15);
+	border-radius: var(--radius);
+	margin-top: 1rem;
+}
+
+.callout-icon {
+	font-size: 1.5rem;
+	color: var(--accent);
+	flex-shrink: 0;
+	line-height: 1.6;
+}
+
+.callout p {
+	color: var(--text-secondary);
+	font-size: 0.95rem;
+}
+
+.callout strong {
+	color: var(--text-primary);
+}
+
+/* ── Design System: Tip ──────────────────────────────────── */
+.tips-grid {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	margin-top: 1rem;
+}
+
+.tip {
+	display: flex;
+	align-items: flex-start;
+	gap: 1.25rem;
+	padding: 1.25rem 1.5rem;
+	background: var(--bg-card);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	transition: border-color 0.3s;
+}
+
+.tip:hover {
+	border-color: var(--border-bright);
+}
+
+.tip-num {
+	font-size: 0.85rem;
+	font-weight: 700;
+	color: var(--accent);
+	flex-shrink: 0;
+	width: 28px;
+	height: 28px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(129, 140, 248, 0.1);
+	border-radius: 6px;
+	font-variant-numeric: tabular-nums;
+}
+
+.tip h3 {
+	font-size: 1rem;
+	margin-bottom: 0.2rem;
+}
+
+.tip p {
+	font-size: 0.9rem;
+	color: var(--text-secondary);
+}
+
+/* ── Design System: Key Takeaway ─────────────────────────── */
+.key-takeaway {
+	text-align: center;
+	padding: 3rem 2rem;
+	background: rgba(129, 140, 248, 0.04);
+	border: 1px solid rgba(129, 140, 248, 0.12);
+	border-radius: var(--radius);
+}
+
+.key-takeaway p {
+	font-size: clamp(1rem, 2vw, 1.2rem);
+	color: var(--text-secondary);
+	line-height: 1.8;
+	max-width: 600px;
+	margin: 0 auto;
+}
+
+.key-takeaway strong {
+	color: var(--text-primary);
+	background: var(--gradient-text);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
+}
+
+/* ── Design System: Era Tag ──────────────────────────────── */
+.era-tag {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	padding: 1.25rem 1.5rem;
+	background: rgba(251, 146, 60, 0.05);
+	border: 1px solid rgba(251, 146, 60, 0.15);
+	border-radius: var(--radius);
+	margin-top: 1rem;
+}
+
+.era-dot {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: #fb923c;
+	flex-shrink: 0;
+	box-shadow: 0 0 12px rgba(251, 146, 60, 0.4);
+}
+
+.era-tag p {
+	color: var(--text-secondary);
+	font-size: 0.95rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
 	html {
 		scroll-behavior: auto;
