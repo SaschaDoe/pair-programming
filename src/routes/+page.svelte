@@ -29,6 +29,97 @@
 	let opText    = $derived(fadeCalc(originScroll, 0.20, 0.30, 0.45, 0.55));
 	let opBullets = $derived(fadeCalc(originScroll, 0.48, 0.58, 0.72, 0.82));
 	let opGermany = $derived(fadeCalc(originScroll, 0.75, 0.85, 0.97, 1.01));
+
+	// ── Where to Pair — architecture complexity section ──
+	let complexWrapper: HTMLElement | undefined = $state();
+	let complexScroll = $state(0);
+
+	$effect(() => {
+		if (!complexWrapper) return;
+		const onScroll = () => {
+			const rect = complexWrapper!.getBoundingClientRect();
+			const total = complexWrapper!.scrollHeight - window.innerHeight;
+			complexScroll = Math.min(1, Math.max(0, -rect.top / total));
+		};
+		window.addEventListener('scroll', onScroll, { passive: true });
+		return () => window.removeEventListener('scroll', onScroll);
+	});
+
+	function rampIn(scroll: number, start: number, end: number): number {
+		if (scroll <= start) return 0;
+		if (scroll >= end) return 1;
+		return (scroll - start) / (end - start);
+	}
+
+	// Phase opacities — progressive build-up
+	let cpxLayers  = $derived(Math.min(rampIn(complexScroll, 0.0, 0.06), 1 - rampIn(complexScroll, 0.14, 0.24)));
+	let cpxNodes   = $derived(rampIn(complexScroll, 0.18, 0.28));
+	let cpxLines   = $derived(rampIn(complexScroll, 0.30, 0.40));
+	let cpxArrow   = $derived(rampIn(complexScroll, 0.44, 0.54));
+	let cpxRed     = $derived(rampIn(complexScroll, 0.58, 0.68));
+	let cpxAll     = $derived(complexScroll < 0.76 ? 1 : Math.max(0, 1 - (complexScroll - 0.76) / 0.08));
+	let cpxEnd     = $derived(rampIn(complexScroll, 0.82, 0.92));
+
+	// Class nodes data
+	type CNode = { id: string; label: string; x: number; y: number; w: number; layer: string; red?: boolean };
+	const classNodes: CNode[] = [
+		// Config
+		{ id: 'appConfig',  label: 'AppConfig',  x: 250, y: 14,  w: 84,  layer: 'config' },
+		{ id: 'routes',     label: 'Routes',     x: 355, y: 22,  w: 62,  layer: 'config' },
+		// UI
+		{ id: 'loginPage',  label: 'LoginPage',  x: 80,  y: 78,  w: 82,  layer: 'ui' },
+		{ id: 'dashboard',  label: 'Dashboard',  x: 200, y: 84,  w: 82,  layer: 'ui', red: true },
+		{ id: 'userProf',   label: 'UserProfile', x: 330, y: 78,  w: 88,  layer: 'ui' },
+		{ id: 'settings',   label: 'SettingsView', x: 460, y: 84, w: 96,  layer: 'ui' },
+		// Services
+		{ id: 'authSvc',    label: 'AuthService', x: 18,  y: 155, w: 88,  layer: 'svc' },
+		{ id: 'userSvc',    label: 'UserService', x: 18,  y: 188, w: 86,  layer: 'svc', red: true },
+		// ViewModels
+		{ id: 'loginVM',    label: 'LoginVM',    x: 200, y: 155, w: 72,  layer: 'svc' },
+		{ id: 'dashVM',     label: 'DashboardVM', x: 195, y: 188, w: 98, layer: 'svc', red: true },
+		{ id: 'profVM',     label: 'ProfileVM',  x: 345, y: 168, w: 78,  layer: 'svc' },
+		// DTOs
+		{ id: 'userDTO',    label: 'UserDTO',    x: 510, y: 155, w: 70,  layer: 'svc' },
+		{ id: 'confDTO',    label: 'ConfigDTO',  x: 510, y: 186, w: 80,  layer: 'svc' },
+		// Use Cases
+		{ id: 'loginUC',    label: 'Login',       x: 135, y: 255, w: 64,  layer: 'uc' },
+		{ id: 'getUserUC',  label: 'GetUser',     x: 260, y: 260, w: 70,  layer: 'uc', red: true },
+		{ id: 'updateUC',   label: 'UpdateProfile', x: 410, y: 255, w: 104, layer: 'uc' },
+		// Domain
+		{ id: 'user',       label: 'User',       x: 200, y: 335, w: 52,  layer: 'domain' },
+		{ id: 'role',       label: 'Role',       x: 280, y: 340, w: 48,  layer: 'domain' },
+		{ id: 'settingsDom', label: 'Settings',  x: 365, y: 335, w: 66,  layer: 'domain' },
+	];
+
+	type Conn = { from: string; to: string; red?: boolean };
+	const connections: Conn[] = [
+		// UI → VM
+		{ from: 'loginPage', to: 'loginVM' },
+		{ from: 'dashboard', to: 'dashVM', red: true },
+		{ from: 'userProf',  to: 'profVM' },
+		{ from: 'settings',  to: 'profVM' },
+		// VM → Service
+		{ from: 'loginVM',   to: 'authSvc' },
+		{ from: 'dashVM',    to: 'userSvc', red: true },
+		// VM → Use Case
+		{ from: 'loginVM',   to: 'loginUC' },
+		{ from: 'dashVM',    to: 'getUserUC', red: true },
+		{ from: 'profVM',    to: 'updateUC' },
+		// Use Case → Domain
+		{ from: 'loginUC',   to: 'user' },
+		{ from: 'getUserUC', to: 'user', red: true },
+		{ from: 'updateUC',  to: 'settingsDom' },
+		// Config → UI
+		{ from: 'appConfig', to: 'loginPage' },
+		{ from: 'routes',    to: 'dashboard', red: true },
+		// Service → DTO
+		{ from: 'authSvc',   to: 'userDTO' },
+		{ from: 'userSvc',   to: 'confDTO', red: true },
+	];
+
+	function nodeById(id: string) { return classNodes.find(n => n.id === id)!; }
+	function cx(n: CNode) { return n.x + n.w / 2; }
+	function cy(n: CNode) { return n.y + 13; }
 </script>
 
 <!-- ============================================================ -->
@@ -552,18 +643,111 @@
 					</div>
 				</div>
 			</ScrollReveal>
-			<ScrollReveal delay={600}>
-				<div class="pitfall">
-					<div class="pitfall-header">
-						<h3>Not Always Suitable</h3>
-						<span class="pitfall-severity low">manageable</span>
-					</div>
-					<p>Routine tasks don't benefit much.</p>
-					<div class="pitfall-solution">
-						<strong>Fix:</strong> Save pairing for complex, critical, or learning tasks.
+		</div>
+	</div>
+</section>
+
+<!-- ============================================================ -->
+<!-- WHERE TO PAIR — ARCHITECTURE DIAGRAM                         -->
+<!-- ============================================================ -->
+<section class="complex-scroll" bind:this={complexWrapper}>
+	<div class="complex-sticky">
+		<div class="container">
+			<p class="label">Where It Matters</p>
+			<h2>Where to Pair Program</h2>
+
+			<div class="complex-stage">
+				<div style="opacity: {cpxAll};">
+					<svg class="arch-svg" viewBox="0 0 660 400">
+						<!-- ── Phase 1: Layer categorization boxes ── -->
+						<g style="opacity: {cpxLayers};">
+							<!-- Config -->
+							<rect x="230" y="5" width="200" height="52" rx="8" class="layer-box layer-config" />
+							<text x="330" y="27" class="layer-title">Config</text>
+							<text x="330" y="43" class="layer-sub">Architecture / Non-functional Req.</text>
+							<!-- UI -->
+							<rect x="230" y="78" width="200" height="48" rx="8" class="layer-box layer-ui" />
+							<text x="330" y="99" class="layer-title">UI</text>
+							<text x="330" y="113" class="layer-sub">Visual Requirements</text>
+							<!-- IO Service -->
+							<rect x="55" y="155" width="140" height="48" rx="8" class="layer-box layer-svc" />
+							<text x="125" y="176" class="layer-title">IO Service</text>
+							<text x="125" y="191" class="layer-sub">Data / Integration Req.</text>
+							<!-- Viewmodel -->
+							<rect x="260" y="155" width="140" height="48" rx="8" class="layer-box layer-svc" />
+							<text x="330" y="176" class="layer-title">Viewmodel</text>
+							<text x="330" y="191" class="layer-sub">UX Requirements</text>
+							<!-- DTOs -->
+							<rect x="465" y="155" width="140" height="48" rx="8" class="layer-box layer-svc" />
+							<text x="535" y="176" class="layer-title">DTOs</text>
+							<!-- Use Case -->
+							<rect x="230" y="235" width="200" height="48" rx="8" class="layer-box layer-uc" />
+							<text x="330" y="256" class="layer-title">Use Case</text>
+							<text x="330" y="271" class="layer-sub">User Requirements</text>
+							<!-- Domain -->
+							<rect x="230" y="318" width="200" height="48" rx="8" class="layer-box layer-domain" />
+							<text x="330" y="339" class="layer-title">Domain</text>
+							<text x="330" y="354" class="layer-sub">Glossary</text>
+						</g>
+
+						<!-- ── Connection lines (rendered BELOW nodes) ── -->
+						<g style="opacity: {cpxLines};">
+							{#each connections as c}
+								{@const f = nodeById(c.from)}
+								{@const t = nodeById(c.to)}
+								<line
+									x1={cx(f)} y1={cy(f)}
+									x2={cx(t)} y2={cy(t)}
+									class="cline"
+									class:cline-red={c.red && cpxRed > 0.5}
+								/>
+							{/each}
+						</g>
+
+						<!-- ── Class nodes (rendered ON TOP of lines) ── -->
+						<g style="opacity: {cpxNodes};">
+							{#each classNodes as n, i}
+								<g style="transform: translateY({(1 - cpxNodes) * 15}px); opacity: {Math.min(1, cpxNodes * 3 - i * 0.1)};">
+									<rect
+										x={n.x} y={n.y} width={n.w} height={26} rx={5}
+										class="cnode cnode-{n.layer}"
+										class:cnode-trigger={n.id === 'getUserUC' && cpxRed > 0.5}
+										class:cnode-affected={n.red && n.id !== 'getUserUC' && cpxRed > 0.5}
+									/>
+									<text x={n.x + n.w / 2} y={n.y + 16} class="cnode-label">{n.label}</text>
+								</g>
+							{/each}
+						</g>
+
+						<!-- ── Change frequency arrow ── -->
+						<g style="opacity: {cpxArrow};">
+							<!-- Vertical line -->
+							<line x1="635" y1="370" x2="635" y2="25" stroke="#fb923c" stroke-width="2" />
+							<!-- Arrowhead pointing UP /\ -->
+							<path d="M625,25 L635,8 L645,25" fill="none" stroke="#fb923c" stroke-width="2" stroke-linejoin="round" />
+							<text x="650" y="200" class="arrow-label" transform="rotate(90, 650, 200)">More changes at the top</text>
+						</g>
+					</svg>
+
+					<!-- Impact text below SVG -->
+					{#if cpxRed > 0.3}
+						<p class="arch-impact" style="opacity: {cpxRed};">
+							When a user requirement changes, everything connected above it is affected.
+						</p>
+					{/if}
+				</div>
+
+				<!-- Conclusion (fades in as diagram fades out) -->
+				<div class="complex-end" style="opacity: {cpxEnd}; transform: translateY({(1 - cpxEnd) * 30}px);">
+					<p class="lead">
+						Pair program the parts that hurt most when they break &mdash; highly interconnected code that sits on top of <strong>changing requirements</strong>.
+					</p>
+					<div class="era-tag" style="margin-top: 1.5rem;">
+						<span class="era-dot"></span>
+						<p>Use Cases, Viewmodels, and IO Services are where pairing pays off. Domain and DTOs are usually stable enough for solo work.</p>
 					</div>
 				</div>
-			</ScrollReveal>
+			</div>
 		</div>
 	</div>
 </section>
@@ -2662,5 +2846,137 @@
 		color: var(--text-muted);
 		font-size: 0.8rem;
 		border-top: 1px solid var(--border);
+	}
+
+	/* ── Where to Pair — Architecture Scroll Section ─────── */
+	.complex-scroll {
+		position: relative;
+		height: 700vh;
+	}
+
+	.complex-sticky {
+		position: sticky;
+		top: 0;
+		height: 100vh;
+		display: flex;
+		align-items: center;
+		padding: 4rem 0;
+	}
+
+	.complex-sticky > .container {
+		width: 100%;
+	}
+
+	.complex-stage {
+		position: relative;
+		margin-top: 1.5rem;
+	}
+
+	.complex-end {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		text-align: center;
+		will-change: opacity, transform;
+	}
+
+	/* ── SVG Diagram ───────────────────────────────────────── */
+	.arch-svg {
+		width: 100%;
+		max-width: 700px;
+		margin: 0 auto;
+		display: block;
+		overflow: visible;
+	}
+
+	/* ── Phase 1: Layer boxes ──────────────────────────────── */
+	.layer-box { stroke-width: 1.5; }
+	.layer-config { fill: rgba(244, 63, 94, 0.25); stroke: rgba(244, 63, 94, 0.6); }
+	.layer-ui { fill: rgba(236, 72, 153, 0.25); stroke: rgba(236, 72, 153, 0.6); }
+	.layer-svc { fill: rgba(234, 179, 8, 0.25); stroke: rgba(234, 179, 8, 0.6); }
+	.layer-uc { fill: rgba(96, 165, 250, 0.25); stroke: rgba(96, 165, 250, 0.6); }
+	.layer-domain { fill: rgba(74, 222, 128, 0.25); stroke: rgba(74, 222, 128, 0.6); }
+
+	.layer-title {
+		fill: #ffffff;
+		font-size: 13px;
+		font-weight: 700;
+		text-anchor: middle;
+		dominant-baseline: middle;
+	}
+
+	.layer-sub {
+		fill: #a1a1aa;
+		font-size: 9px;
+		text-anchor: middle;
+		dominant-baseline: middle;
+	}
+
+	/* ── Phase 2: Class nodes ──────────────────────────────── */
+	.cnode { stroke-width: 1.5; }
+	.cnode-config { fill: #1f0a10; stroke: rgba(244, 63, 94, 0.7); }
+	.cnode-ui { fill: #1f0a16; stroke: rgba(236, 72, 153, 0.7); }
+	.cnode-svc { fill: #1a1708; stroke: rgba(234, 179, 8, 0.7); }
+	.cnode-uc { fill: #0a1220; stroke: rgba(96, 165, 250, 0.7); }
+	.cnode-domain { fill: #0a1a0e; stroke: rgba(74, 222, 128, 0.7); }
+
+	.cnode-label {
+		fill: #fafafa;
+		font-size: 10px;
+		font-weight: 600;
+		text-anchor: middle;
+		dominant-baseline: middle;
+		pointer-events: none;
+	}
+
+	/* ── Connection lines ──────────────────────────────────── */
+	.cline {
+		stroke: rgba(255, 255, 255, 0.12);
+		stroke-width: 1;
+		stroke-linecap: round;
+		transition: stroke 0.6s, stroke-width 0.6s, filter 0.6s;
+	}
+
+	.cline-red {
+		stroke: #f43f5e;
+		stroke-width: 1.5;
+		filter: drop-shadow(0 0 4px rgba(244, 63, 94, 0.4));
+	}
+
+	/* ── Red highlights ────────────────────────────────────── */
+	.cnode-trigger {
+		stroke: #f43f5e !important;
+		stroke-width: 2 !important;
+		filter: drop-shadow(0 0 8px rgba(244, 63, 94, 0.5));
+		animation: svg-pulse 2s ease-in-out infinite;
+	}
+
+	.cnode-affected {
+		stroke: rgba(244, 63, 94, 0.6) !important;
+		filter: drop-shadow(0 0 4px rgba(244, 63, 94, 0.25));
+	}
+
+	@keyframes svg-pulse {
+		0%, 100% { filter: drop-shadow(0 0 8px rgba(244, 63, 94, 0.4)); }
+		50% { filter: drop-shadow(0 0 16px rgba(244, 63, 94, 0.7)); }
+	}
+
+	/* ── Arrow label ───────────────────────────────────────── */
+	.arrow-label {
+		fill: #fb923c;
+		font-size: 10px;
+		font-weight: 600;
+		text-anchor: middle;
+		dominant-baseline: middle;
+	}
+
+	/* ── Impact text ───────────────────────────────────────── */
+	.arch-impact {
+		text-align: center;
+		margin-top: 1rem;
+		font-size: 0.95rem;
+		color: #f43f5e;
+		font-weight: 600;
 	}
 </style>

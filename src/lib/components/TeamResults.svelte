@@ -8,6 +8,7 @@
 	let stats = $state<Stats | null>(null);
 	let responseCount = $state(0);
 	let loading = $state(true);
+	let showResults = $state(false);
 
 	const answerLabels: Record<AnswerChoice, string> = {
 		a: 'Safe',
@@ -82,97 +83,121 @@
 	}
 </script>
 
-{#if loading}
-	<div class="team-loading">
-		<p>Loading results...</p>
-	</div>
-{:else if responseCount > 0 && stats}
-	<div class="team-results">
-		<p class="response-count">
-			Based on <strong>{responseCount}</strong> {responseCount === 1 ? 'response' : 'responses'}
-		</p>
+<div class="team-actions">
+	<a href="/quiz" class="cta-link">Take the Quiz</a>
+	<button class="cta-link cta-secondary" onclick={() => showResults = !showResults}>
+		{showResults ? 'Hide Results' : 'Show Results'}
+	</button>
+</div>
 
-		<!-- Overall distribution -->
-		<div class="overall">
-			<h3 class="section-label">Overall Distribution</h3>
-			<div class="stacked-bar">
-				{#each (['a', 'b', 'c', 'd'] as const) as key}
-					{#if overallPct[key] > 0}
-						<div
-							class="bar-segment bar-{key}"
-							style="width: {overallPct[key]}%"
-							title="{answerLabels[key]}: {overallPct[key]}%"
-						>
-							{#if overallPct[key] >= 8}
-								<span class="bar-label">{overallPct[key]}%</span>
-							{/if}
+{#if showResults}
+	{#if loading}
+		<div class="team-loading">
+			<p>Loading results...</p>
+		</div>
+	{:else if responseCount > 0 && stats}
+		<div class="team-results">
+			<p class="response-count">
+				Based on <strong>{responseCount}</strong> {responseCount === 1 ? 'response' : 'responses'}
+			</p>
+
+			<!-- Overall distribution -->
+			<div class="overall">
+				<h3 class="section-label">Overall Distribution</h3>
+				<div class="stacked-bar">
+					{#each (['a', 'b', 'c', 'd'] as const) as key}
+						{#if overallPct[key] > 0}
+							<div
+								class="bar-segment bar-{key}"
+								style="width: {overallPct[key]}%"
+								title="{answerLabels[key]}: {overallPct[key]}%"
+							>
+								{#if overallPct[key] >= 8}
+									<span class="bar-label">{overallPct[key]}%</span>
+								{/if}
+							</div>
+						{/if}
+					{/each}
+				</div>
+				<div class="legend">
+					{#each (['a', 'b', 'c', 'd'] as const) as key}
+						<div class="legend-item">
+							<span class="legend-dot dot-{key}"></span>
+							<span>{answerLabels[key]}</span>
 						</div>
-					{/if}
+					{/each}
+				</div>
+			</div>
+
+			<!-- Per-question bars -->
+			<div class="per-question">
+				<h3 class="section-label">General Psychological Safety</h3>
+				{#each quizQuestions.filter(q => q.section === 'general') as q}
+					<div class="q-row">
+						<p class="q-text"><span class="q-num">{q.id}.</span> {q.text}</p>
+						<div class="mini-bar">
+							{#each (['a', 'b', 'c', 'd'] as const) as key}
+								{@const pct = getPct(String(q.id), key)}
+								{#if pct > 0}
+									<div
+										class="bar-segment bar-{key}"
+										style="width: {pct}%"
+										title="{key}: {pct}%"
+									></div>
+								{/if}
+							{/each}
+						</div>
+					</div>
+				{/each}
+
+				<h3 class="section-label" style="margin-top: 2rem;">Pair Programming</h3>
+				{#each quizQuestions.filter(q => q.section === 'pairing') as q}
+					<div class="q-row">
+						<p class="q-text"><span class="q-num">{q.id}.</span> {q.text}</p>
+						<div class="mini-bar">
+							{#each (['a', 'b', 'c', 'd'] as const) as key}
+								{@const pct = getPct(String(q.id), key)}
+								{#if pct > 0}
+									<div
+										class="bar-segment bar-{key}"
+										style="width: {pct}%"
+										title="{key}: {pct}%"
+									></div>
+								{/if}
+							{/each}
+						</div>
+					</div>
 				{/each}
 			</div>
-			<div class="legend">
-				{#each (['a', 'b', 'c', 'd'] as const) as key}
-					<div class="legend-item">
-						<span class="legend-dot dot-{key}"></span>
-						<span>{answerLabels[key]}</span>
-					</div>
-				{/each}
-			</div>
 		</div>
-
-		<!-- Per-question bars -->
-		<div class="per-question">
-			<h3 class="section-label">General Psychological Safety</h3>
-			{#each quizQuestions.filter(q => q.section === 'general') as q}
-				<div class="q-row">
-					<p class="q-text"><span class="q-num">{q.id}.</span> {q.text}</p>
-					<div class="mini-bar">
-						{#each (['a', 'b', 'c', 'd'] as const) as key}
-							{@const pct = getPct(String(q.id), key)}
-							{#if pct > 0}
-								<div
-									class="bar-segment bar-{key}"
-									style="width: {pct}%"
-									title="{key}: {pct}%"
-								></div>
-							{/if}
-						{/each}
-					</div>
-				</div>
-			{/each}
-
-			<h3 class="section-label" style="margin-top: 2rem;">Pair Programming</h3>
-			{#each quizQuestions.filter(q => q.section === 'pairing') as q}
-				<div class="q-row">
-					<p class="q-text"><span class="q-num">{q.id}.</span> {q.text}</p>
-					<div class="mini-bar">
-						{#each (['a', 'b', 'c', 'd'] as const) as key}
-							{@const pct = getPct(String(q.id), key)}
-							{#if pct > 0}
-								<div
-									class="bar-segment bar-{key}"
-									style="width: {pct}%"
-									title="{key}: {pct}%"
-								></div>
-							{/if}
-						{/each}
-					</div>
-				</div>
-			{/each}
+	{:else}
+		<div class="team-empty">
+			<p>No responses yet. Be the first!</p>
 		</div>
-
-		<div class="cta">
-			<a href="/quiz" class="cta-link">Take the Quiz Yourself</a>
-		</div>
-	</div>
-{:else}
-	<div class="team-empty">
-		<p>No responses yet. Be the first!</p>
-		<a href="/quiz" class="cta-link">Take the Quiz</a>
-	</div>
+	{/if}
 {/if}
 
 <style>
+	.team-actions {
+		display: flex;
+		gap: 1rem;
+		justify-content: center;
+		flex-wrap: wrap;
+		margin-bottom: 1.5rem;
+	}
+
+	.cta-secondary {
+		background: transparent !important;
+		border: 1px solid var(--border);
+		color: var(--text-secondary) !important;
+		cursor: pointer;
+	}
+
+	.cta-secondary:hover {
+		border-color: var(--accent);
+		color: var(--accent) !important;
+	}
+
 	.team-loading,
 	.team-empty {
 		text-align: center;
