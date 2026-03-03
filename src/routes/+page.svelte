@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ScrollReveal from '$lib/components/ScrollReveal.svelte';
 	import TeamResults from '$lib/components/TeamResults.svelte';
+	import FeedbackForm from '$lib/components/FeedbackForm.svelte';
 
 	let originWrapper: HTMLElement | undefined = $state();
 	let originScroll = $state(0);
@@ -1518,6 +1519,19 @@
 					</div>
 				</div>
 			</div>
+		</ScrollReveal>
+	</div>
+</section>
+
+<!-- ============================================================ -->
+<!-- FEEDBACK                                                     -->
+<!-- ============================================================ -->
+<section class="section">
+	<div class="container">
+		<ScrollReveal>
+			<p class="label">Feedback</p>
+			<h2>Was This Helpful?</h2>
+			<FeedbackForm />
 		</ScrollReveal>
 	</div>
 </section>

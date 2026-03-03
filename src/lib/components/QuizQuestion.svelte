@@ -1,6 +1,8 @@
 <script lang="ts">
 	import type { QuizQuestion, AnswerChoice } from '$lib/types';
 
+	const displayLabels = ['a', 'b', 'c', 'd'];
+
 	let {
 		question,
 		selectedAnswer,
@@ -16,13 +18,13 @@
 	<span class="question-number">{question.id} / 18</span>
 	<h2 class="question-text">{question.text}</h2>
 	<div class="options">
-		{#each question.options as option}
+		{#each question.options as option, i}
 			<button
 				class="option"
 				class:selected={selectedAnswer === option.key}
 				onclick={() => onSelect(option.key)}
 			>
-				<span class="option-key">{option.key}</span>
+				<span class="option-key">{displayLabels[i]}</span>
 				<span class="option-text">{option.text}</span>
 			</button>
 		{/each}

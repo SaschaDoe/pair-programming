@@ -1,7 +1,22 @@
 <script lang="ts">
 	import { quizQuestions, sectionIntros } from '$lib/data/quizQuestions';
 	import QuizQuestion from '$lib/components/QuizQuestion.svelte';
-	import type { AnswerChoice, QuizAnswers } from '$lib/types';
+	import type { AnswerChoice, QuizAnswers, QuizQuestion as QType } from '$lib/types';
+
+	function shuffleArray<T>(arr: T[]): T[] {
+		const shuffled = [...arr];
+		for (let i = shuffled.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1));
+			[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+		}
+		return shuffled;
+	}
+
+	// Shuffle option order per question once per session
+	const shuffledQuestions: QType[] = quizQuestions.map(q => ({
+		...q,
+		options: shuffleArray(q.options)
+	}));
 
 	let currentIndex = $state(0);
 	let answers: QuizAnswers = $state({});
@@ -10,7 +25,7 @@
 	let alias = $state('');
 	let showSectionIntro = $state(true);
 
-	const currentQuestion = $derived(quizQuestions[currentIndex]);
+	const currentQuestion = $derived(shuffledQuestions[currentIndex]);
 	const progress = $derived(((currentIndex) / quizQuestions.length) * 100);
 	const allAnswered = $derived(Object.keys(answers).length === quizQuestions.length);
 	const isLastQuestion = $derived(currentIndex === quizQuestions.length - 1);
