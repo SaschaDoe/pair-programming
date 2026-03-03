@@ -16,9 +16,19 @@
 		return () => window.removeEventListener('scroll', onScroll);
 	});
 
-	let originPhase = $derived(
-		originScroll < 0.3 ? 'photos' : originScroll < 0.65 ? 'text' : 'bullets'
-	);
+	// Smooth per-phase opacity with crossfade overlap
+	function fadeCalc(scroll: number, fadeIn: number, solidStart: number, solidEnd: number, fadeOut: number): number {
+		if (scroll <= fadeIn) return 0;
+		if (scroll <= solidStart) return (scroll - fadeIn) / (solidStart - fadeIn);
+		if (scroll <= solidEnd) return 1;
+		if (scroll <= fadeOut) return 1 - (scroll - solidEnd) / (fadeOut - solidEnd);
+		return 0;
+	}
+
+	let opPhotos  = $derived(fadeCalc(originScroll, -0.01, 0.02, 0.18, 0.28));
+	let opText    = $derived(fadeCalc(originScroll, 0.20, 0.30, 0.45, 0.55));
+	let opBullets = $derived(fadeCalc(originScroll, 0.48, 0.58, 0.72, 0.82));
+	let opGermany = $derived(fadeCalc(originScroll, 0.75, 0.85, 0.97, 1.01));
 </script>
 
 <!-- ============================================================ -->
@@ -101,55 +111,61 @@
 			<p class="label">The Origin</p>
 			<h2>Where It Came From</h2>
 
-			<!-- Phase 1: Photos -->
-			<div class="origin-phase" class:origin-visible={originPhase === 'photos'}>
-				<div class="origin-portraits">
-					<div class="origin-portrait">
-						<img src="/pics/Kent_Beck.jpg" alt="Kent Beck" />
-						<span>Kent Beck</span>
-					</div>
-					<div class="origin-portrait">
-						<img src="/pics/Ron_Jeffries.jpg" alt="Ron Jeffries" />
-						<span>Ron Jeffries</span>
-					</div>
-					<div class="origin-portrait">
-						<img src="/pics/Martin_Fowler.jpg" alt="Martin Fowler" />
-						<span>Martin Fowler</span>
-					</div>
-					<div class="origin-portrait">
-						<img src="/pics/Robert_C._Martin.jpg" alt="Robert C. Martin" />
-						<span>Robert C. Martin</span>
+			<div class="origin-stage">
+				<!-- Phase 1: Photos -->
+				<div class="origin-phase" style="opacity: {opPhotos}; transform: translateY({(1 - opPhotos) * 30}px);">
+					<div class="origin-portraits">
+						<div class="origin-portrait">
+							<img src="/pics/Kent_Beck.jpg" alt="Kent Beck" />
+							<span>Kent Beck</span>
+						</div>
+						<div class="origin-portrait">
+							<img src="/pics/Ron_Jeffries.jpg" alt="Ron Jeffries" />
+							<span>Ron Jeffries</span>
+						</div>
+						<div class="origin-portrait">
+							<img src="/pics/Martin_Fowler.jpg" alt="Martin Fowler" />
+							<span>Martin Fowler</span>
+						</div>
+						<div class="origin-portrait">
+							<img src="/pics/Robert_C._Martin.jpg" alt="Robert C. Martin" />
+							<span>Robert C. Martin</span>
+						</div>
 					</div>
 				</div>
-			</div>
 
-			<!-- Phase 2: XP explanation -->
-			<div class="origin-phase" class:origin-visible={originPhase === 'text'}>
-				<p class="lead">
-					The late 1990s. People were fed up with endless processes that led nowhere.
-				</p>
-				<p class="body" style="margin-top: 1.5rem;">
-					Kent Beck created <strong>Extreme Programming (XP)</strong> — a radical approach that put working software and fast feedback above heavy documentation and planning. Sit with the customer. Understand requirements <strong>fast</strong>. Ship in short cycles.
-				</p>
-				<p class="body" style="margin-top: 1rem;">
-					Pair programming was one of its core practices — two developers, one screen. That was the cutting edge.
-				</p>
-			</div>
+				<!-- Phase 2: XP explanation -->
+				<div class="origin-phase" style="opacity: {opText}; transform: translateY({(1 - opText) * 30}px);">
+					<p class="lead">
+						The late 1990s. People were fed up with endless processes that led nowhere.
+					</p>
+					<p class="body" style="margin-top: 1.5rem;">
+						Kent Beck created <strong>Extreme Programming (XP)</strong> — a radical approach that put working software and fast feedback above heavy documentation and planning. Sit with the customer. Understand requirements <strong>fast</strong>. Ship in short cycles.
+					</p>
+					<p class="body" style="margin-top: 1rem;">
+						Pair programming was one of its core practices — two developers, one screen. That was the cutting edge.
+					</p>
+				</div>
 
-			<!-- Phase 3: XP bullet points + Germany note -->
-			<div class="origin-phase" class:origin-visible={originPhase === 'bullets'}>
-				<p class="lead" style="margin-bottom: 1.5rem;">Extreme Programming in a nutshell:</p>
-				<ul class="origin-bullets">
-					<li><strong>Short iterations</strong> — deliver working software every 1–2 weeks</li>
-					<li><strong>Test-Driven Development</strong> — write the test before the code</li>
-					<li><strong>Continuous Integration</strong> — merge and test constantly</li>
-					<li><strong>Pair Programming</strong> — two minds, one keyboard</li>
-					<li><strong>Collective Code Ownership</strong> — anyone can change any code</li>
-					<li><strong>Simple Design</strong> — build only what you need right now</li>
-				</ul>
-				<div class="era-tag" style="margin-top: 2rem;">
-					<span class="era-dot"></span>
-					<p>Neither TDD nor pair programming ever fully took hold in the German dev community. In 2026, that seems more unlikely than ever.</p>
+				<!-- Phase 3: XP bullet points -->
+				<div class="origin-phase" style="opacity: {opBullets}; transform: translateY({(1 - opBullets) * 30}px);">
+					<p class="lead" style="margin-bottom: 1.5rem;">Extreme Programming in a nutshell:</p>
+					<ul class="origin-bullets">
+						<li><strong>Short iterations</strong> — deliver working software every 1–2 weeks</li>
+						<li><strong>Test-Driven Development</strong> — write the test before the code</li>
+						<li><strong>Continuous Integration</strong> — merge and test constantly</li>
+						<li><strong>Pair Programming</strong> — two minds, one keyboard</li>
+						<li><strong>Collective Code Ownership</strong> — anyone can change any code</li>
+						<li><strong>Simple Design</strong> — build only what you need right now</li>
+					</ul>
+				</div>
+
+				<!-- Phase 4: Germany note -->
+				<div class="origin-phase" style="opacity: {opGermany}; transform: translateY({(1 - opGermany) * 30}px);">
+					<div class="era-tag">
+						<span class="era-dot"></span>
+						<p>Neither TDD nor pair programming ever fully took hold in the German dev community. In 2026, that seems more unlikely than ever.</p>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -2326,39 +2342,40 @@
 	/* ── Origin Scroll Section ──────────────────────────────── */
 	.origin-scroll {
 		position: relative;
-		height: 300vh;
+		height: 500vh;
 	}
 
 	.origin-sticky {
 		position: sticky;
 		top: 0;
-		min-height: 100vh;
+		height: 100vh;
 		display: flex;
 		align-items: center;
 		padding: 4rem 0;
 	}
 
-	.origin-phase {
-		opacity: 0;
-		transform: translateY(20px);
-		transition: opacity 0.5s ease, transform 0.5s ease;
-		position: absolute;
+	.origin-sticky > .container {
 		width: 100%;
-		pointer-events: none;
 	}
 
-	.origin-phase.origin-visible {
-		opacity: 1;
-		transform: translateY(0);
+	.origin-stage {
 		position: relative;
-		pointer-events: auto;
+		margin-top: 2rem;
+		min-height: 350px;
+	}
+
+	.origin-phase {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		will-change: opacity, transform;
 	}
 
 	.origin-portraits {
 		display: grid;
 		grid-template-columns: repeat(4, 1fr);
 		gap: 2rem;
-		margin-top: 2rem;
 	}
 
 	.origin-portrait {
@@ -2376,11 +2393,6 @@
 		border-radius: var(--radius);
 		border: 1px solid var(--border);
 		filter: grayscale(0.3);
-		transition: filter 0.3s ease;
-	}
-
-	.origin-portrait img:hover {
-		filter: grayscale(0);
 	}
 
 	.origin-portrait span {
