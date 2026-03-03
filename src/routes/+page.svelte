@@ -5,6 +5,7 @@
 	import OriginSection from '$lib/components/OriginSection.svelte';
 	import ArchitectureDiagram from '$lib/components/ArchitectureDiagram.svelte';
 	import PracticalExample from '$lib/components/PracticalExample.svelte';
+	import PingPongDiagram from '$lib/components/PingPongDiagram.svelte';
 	import {
 		benefits, safetyTips, classicObjections, pitfalls, pairingStyles,
 		whenColumns, sessionSteps, bestPractices, summaryCards, sources,
@@ -390,6 +391,26 @@
 <!-- PRACTICAL EXAMPLE                                            -->
 <!-- ============================================================ -->
 <PracticalExample />
+
+<!-- ============================================================ -->
+<!-- TDD PING-PONG VISUALIZATION                                  -->
+<!-- ============================================================ -->
+<section class="section">
+	<div class="container">
+		<ScrollReveal>
+			<p class="label">TDD In Action</p>
+			<h2>Ping-Pong Pairing</h2>
+		</ScrollReveal>
+		<ScrollReveal delay={150}>
+			<p class="lead">
+				Roles switch at <strong>every</strong> phase. After two full cycles, both developers have written tests, implementations, and refactorings.
+			</p>
+		</ScrollReveal>
+		<ScrollReveal delay={300}>
+			<PingPongDiagram />
+		</ScrollReveal>
+	</div>
+</section>
 
 <!-- ============================================================ -->
 <!-- ACT IV — MODERN CONTEXT                                      -->
