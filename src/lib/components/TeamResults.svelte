@@ -36,6 +36,19 @@
 
 	$effect(() => {
 		loadResults();
+
+		const channel = supabase
+			.channel('quiz-results')
+			.on(
+				'postgres_changes',
+				{ event: 'INSERT', schema: 'public', table: 'quiz_responses' },
+				() => loadResults()
+			)
+			.subscribe();
+
+		return () => {
+			supabase.removeChannel(channel);
+		};
 	});
 
 	async function loadResults() {

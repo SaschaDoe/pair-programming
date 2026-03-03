@@ -1,6 +1,24 @@
 <script lang="ts">
 	import ScrollReveal from '$lib/components/ScrollReveal.svelte';
 	import TeamResults from '$lib/components/TeamResults.svelte';
+
+	let originWrapper: HTMLElement | undefined = $state();
+	let originScroll = $state(0);
+
+	$effect(() => {
+		if (!originWrapper) return;
+		const onScroll = () => {
+			const rect = originWrapper!.getBoundingClientRect();
+			const total = originWrapper!.scrollHeight - window.innerHeight;
+			originScroll = Math.min(1, Math.max(0, -rect.top / total));
+		};
+		window.addEventListener('scroll', onScroll, { passive: true });
+		return () => window.removeEventListener('scroll', onScroll);
+	});
+
+	let originPhase = $derived(
+		originScroll < 0.3 ? 'photos' : originScroll < 0.65 ? 'text' : 'bullets'
+	);
 </script>
 
 <!-- ============================================================ -->
@@ -68,14 +86,8 @@
 		</ScrollReveal>
 		<ScrollReveal delay={300}>
 			<p class="body">
-				Not about typing faster — about <strong>thinking better</strong>.
+				Then the roles switch.
 			</p>
-		</ScrollReveal>
-		<ScrollReveal delay={450}>
-			<div class="callout">
-				<span class="callout-icon">&rarr;</span>
-				<p>Every line reviewed as it's written. <strong>The smallest possible unit of review.</strong></p>
-			</div>
 		</ScrollReveal>
 	</div>
 </section>
@@ -83,33 +95,64 @@
 <!-- ============================================================ -->
 <!-- WHERE IT CAME FROM                                           -->
 <!-- ============================================================ -->
-<section class="section">
-	<div class="container">
-		<ScrollReveal>
+<section class="origin-scroll" bind:this={originWrapper}>
+	<div class="origin-sticky">
+		<div class="container">
 			<p class="label">The Origin</p>
 			<h2>Where It Came From</h2>
-		</ScrollReveal>
-		<ScrollReveal delay={150}>
-			<p class="lead">
-				The late 1990s. People were fed up with endless processes that led nowhere.
-			</p>
-		</ScrollReveal>
-		<ScrollReveal delay={300}>
-			<p class="body">
-				Kent Beck's Extreme Programming movement wanted to sit with the customer, understand requirements <strong>fast</strong>, and move forward with short feedback loops — TDD, continuous integration, pair programming. No more waterfall.
-			</p>
-		</ScrollReveal>
-		<ScrollReveal delay={450}>
-			<p class="body">
-				A world before remote work. Before AI. Two developers, one screen — that was the cutting edge.
-			</p>
-		</ScrollReveal>
-		<ScrollReveal delay={600}>
-			<div class="era-tag">
-				<span class="era-dot"></span>
-				<p>Neither TDD nor pair programming ever fully took hold in the German dev community. In 2026, that seems more unlikely than ever.</p>
+
+			<!-- Phase 1: Photos -->
+			<div class="origin-phase" class:origin-visible={originPhase === 'photos'}>
+				<div class="origin-portraits">
+					<div class="origin-portrait">
+						<img src="/pics/Kent_Beck.jpg" alt="Kent Beck" />
+						<span>Kent Beck</span>
+					</div>
+					<div class="origin-portrait">
+						<img src="/pics/Ron_Jeffries.jpg" alt="Ron Jeffries" />
+						<span>Ron Jeffries</span>
+					</div>
+					<div class="origin-portrait">
+						<img src="/pics/Martin_Fowler.jpg" alt="Martin Fowler" />
+						<span>Martin Fowler</span>
+					</div>
+					<div class="origin-portrait">
+						<img src="/pics/Robert_C._Martin.jpg" alt="Robert C. Martin" />
+						<span>Robert C. Martin</span>
+					</div>
+				</div>
 			</div>
-		</ScrollReveal>
+
+			<!-- Phase 2: XP explanation -->
+			<div class="origin-phase" class:origin-visible={originPhase === 'text'}>
+				<p class="lead">
+					The late 1990s. People were fed up with endless processes that led nowhere.
+				</p>
+				<p class="body" style="margin-top: 1.5rem;">
+					Kent Beck created <strong>Extreme Programming (XP)</strong> — a radical approach that put working software and fast feedback above heavy documentation and planning. Sit with the customer. Understand requirements <strong>fast</strong>. Ship in short cycles.
+				</p>
+				<p class="body" style="margin-top: 1rem;">
+					Pair programming was one of its core practices — two developers, one screen. That was the cutting edge.
+				</p>
+			</div>
+
+			<!-- Phase 3: XP bullet points + Germany note -->
+			<div class="origin-phase" class:origin-visible={originPhase === 'bullets'}>
+				<p class="lead" style="margin-bottom: 1.5rem;">Extreme Programming in a nutshell:</p>
+				<ul class="origin-bullets">
+					<li><strong>Short iterations</strong> — deliver working software every 1–2 weeks</li>
+					<li><strong>Test-Driven Development</strong> — write the test before the code</li>
+					<li><strong>Continuous Integration</strong> — merge and test constantly</li>
+					<li><strong>Pair Programming</strong> — two minds, one keyboard</li>
+					<li><strong>Collective Code Ownership</strong> — anyone can change any code</li>
+					<li><strong>Simple Design</strong> — build only what you need right now</li>
+				</ul>
+				<div class="era-tag" style="margin-top: 2rem;">
+					<span class="era-dot"></span>
+					<p>Neither TDD nor pair programming ever fully took hold in the German dev community. In 2026, that seems more unlikely than ever.</p>
+				</div>
+			</div>
+		</div>
 	</div>
 </section>
 
@@ -214,79 +257,160 @@
 </section>
 
 <!-- ============================================================ -->
-<!-- THE 2026 QUESTION                                            -->
+<!-- ACT II — THE HUMAN PROBLEM                                   -->
+<!-- ============================================================ -->
+
+<!-- ============================================================ -->
+<!-- WHY IT HASN'T CAUGHT ON                                      -->
 <!-- ============================================================ -->
 <section class="section">
 	<div class="container">
 		<ScrollReveal>
-			<p class="label">The Elephant in the Room</p>
-			<h2>But It's 2026.</h2>
+			<p class="label">The Human Problem</p>
+			<h2>Why It Hasn't Caught On</h2>
 		</ScrollReveal>
 		<ScrollReveal delay={150}>
 			<p class="lead">
-				AI is fast. Work is parallelized. Why would you pair?
+				25 years of research. Clear benefits. And yet — most devs don't do it. Not because it doesn't work. Because it asks something most workplaces don't talk about.
 			</p>
 		</ScrollReveal>
-
-		<div class="objections">
-			<ScrollReveal delay={250}>
-				<div class="objection">
-					<div class="objection-quote">
-						<p>"Why would I work on a feature with Jonathan? He's in a meeting, I have time — with a snap of my fingers it's done."</p>
-					</div>
+		<div class="barrier-grid">
+			<ScrollReveal delay={200}>
+				<div class="card barrier-card">
+					<h3>It requires vulnerability</h3>
+					<p>Your half-formed thoughts, your wrong turns, your "wait, how does this work again?" — all of it becomes visible. Solo, you can edit in peace. Pairing, your thinking is live.</p>
+				</div>
+			</ScrollReveal>
+			<ScrollReveal delay={300}>
+				<div class="card barrier-card">
+					<h3>It triggers performance anxiety</h3>
+					<p>Someone watching you code activates the same stress as public speaking. Your brain shifts from problem-solving to self-monitoring.</p>
 				</div>
 			</ScrollReveal>
 			<ScrollReveal delay={400}>
-				<div class="objection">
-					<div class="objection-quote">
-						<p>"That really costs a lot of time — waiting for the other person, spending energy to engage with them."</p>
-					</div>
+				<div class="card barrier-card">
+					<h3>It exposes knowledge gaps</h3>
+					<p>Solo, you can quietly Google. Pairing makes gaps visible — and in most workplaces, gaps feel dangerous.</p>
 				</div>
 			</ScrollReveal>
-			<ScrollReveal delay={550}>
-				<div class="objection">
-					<div class="objection-quote">
-						<p>"Why would I even want to know how it works in detail if the AI just conjures it up for me?"</p>
-					</div>
+			<ScrollReveal delay={500}>
+				<div class="card barrier-card">
+					<h3>It requires trust most teams haven't built</h3>
+					<p>Amy Edmondson's research on psychological safety. Google's Project Aristotle. The #1 factor in high-performing teams isn't skill — it's safety.</p>
 				</div>
 			</ScrollReveal>
 		</div>
-
-		<ScrollReveal delay={700}>
-			<p class="body" style="margin-top: 2rem;">
-				These aren't beginner thoughts. These are <strong>real questions</strong>.
-			</p>
-		</ScrollReveal>
-
-		<ScrollReveal delay={850}>
-			<div class="answers">
-				<div class="answer">
-					<h3>AI generates code. Not understanding.</h3>
-					<p>When the system breaks at 2 AM, you need someone who <em>understands</em> the code. Pairing builds that in two people at once.</p>
-				</div>
-				<div class="answer">
-					<h3>Speed isn't the bottleneck.</h3>
-					<p>Fast in the wrong direction is just expensive. A navigator catches wrong turns early.</p>
-				</div>
-				<div class="answer">
-					<h3>Solo + AI = knowledge silos.</h3>
-					<p>Everyone grabs their task, AI handles it, nobody understands anyone else's code. Bus factor drops to one.</p>
-				</div>
-				<div class="answer">
-					<h3>Some problems need two humans.</h3>
-					<p>Architecture. Security. Domain logic. The kind of work where someone needs to say "wait, that doesn't make sense."</p>
-				</div>
-			</div>
-		</ScrollReveal>
-
-		<ScrollReveal delay={1000}>
+		<ScrollReveal delay={600}>
 			<div class="callout">
-				<span class="callout-icon">&#x1F9F0;</span>
-				<p><strong>A tool for your toolbox</strong> — for when it's time to look at something really carefully.</p>
+				<span class="callout-icon">&rarr;</span>
+				<p>The question isn't "Should we pair?" — it's <strong>"Does your team feel safe enough to try?"</strong></p>
 			</div>
 		</ScrollReveal>
 	</div>
 </section>
+
+<!-- ============================================================ -->
+<!-- TEAM QUIZ RESULTS                                            -->
+<!-- ============================================================ -->
+<section class="section section-alt" id="team-results">
+	<div class="container">
+		<ScrollReveal>
+			<p class="label">Check In</p>
+			<h2>How Safe Does Your Team Feel?</h2>
+		</ScrollReveal>
+		<ScrollReveal delay={150}>
+			<p class="lead">
+				Before we talk about techniques, let's get honest. Take the psychological safety quiz and see where your team really stands.
+			</p>
+		</ScrollReveal>
+		<ScrollReveal delay={300}>
+			<TeamResults />
+		</ScrollReveal>
+	</div>
+</section>
+
+<!-- ============================================================ -->
+<!-- WHAT WE CAN DO                                               -->
+<!-- ============================================================ -->
+<section class="section">
+	<div class="container">
+		<ScrollReveal>
+			<p class="label">Building Safety</p>
+			<h2>What We Can Do</h2>
+		</ScrollReveal>
+		<ScrollReveal delay={150}>
+			<p class="lead">
+				Psychological safety isn't a personality trait. It's a team condition. And conditions can be changed.
+			</p>
+		</ScrollReveal>
+		<div class="tips-grid">
+			<ScrollReveal delay={100}>
+				<div class="tip">
+					<span class="tip-num">01</span>
+					<div>
+						<h3>Normalise not-knowing</h3>
+						<p>Say "I don't know" out loud — especially if you're senior. It gives everyone else permission to do the same.</p>
+					</div>
+				</div>
+			</ScrollReveal>
+			<ScrollReveal delay={150}>
+				<div class="tip">
+					<span class="tip-num">02</span>
+					<div>
+						<h3>Start with low-stakes pairing</h3>
+						<p>Don't begin with the most critical codebase. Pair on a small feature, a refactor, a test — something where mistakes are cheap.</p>
+					</div>
+				</div>
+			</ScrollReveal>
+			<ScrollReveal delay={200}>
+				<div class="tip">
+					<span class="tip-num">03</span>
+					<div>
+						<h3>Make the first 5 minutes about humans</h3>
+						<p>Check in before you code. "How's your morning?" costs nothing and changes everything about the next hour.</p>
+					</div>
+				</div>
+			</ScrollReveal>
+			<ScrollReveal delay={250}>
+				<div class="tip">
+					<span class="tip-num">04</span>
+					<div>
+						<h3>Agree on ground rules</h3>
+						<p>"We'll switch every 20 minutes. We'll think out loud. We'll ask before grabbing the keyboard." Explicit beats implicit.</p>
+					</div>
+				</div>
+			</ScrollReveal>
+			<ScrollReveal delay={300}>
+				<div class="tip">
+					<span class="tip-num">05</span>
+					<div>
+						<h3>Celebrate mistakes publicly</h3>
+						<p>"Good thing we caught that now" is more powerful than any retrospective. Make catching errors a win, not a blame.</p>
+					</div>
+				</div>
+			</ScrollReveal>
+			<ScrollReveal delay={350}>
+				<div class="tip">
+					<span class="tip-num">06</span>
+					<div>
+						<h3>Give people an exit</h3>
+						<p>Pairing should never feel mandatory in the moment. "I need 30 minutes solo" is always a valid thing to say.</p>
+					</div>
+				</div>
+			</ScrollReveal>
+		</div>
+		<ScrollReveal delay={400}>
+			<div class="callout">
+				<span class="callout-icon">&rarr;</span>
+				<p>Safety is not about being comfortable all the time. It's about knowing that <strong>discomfort won't be punished</strong>.</p>
+			</div>
+		</ScrollReveal>
+	</div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ACT III — PRACTICAL MASTERY                                  -->
+<!-- ============================================================ -->
 
 <!-- ============================================================ -->
 <!-- CLASSIC OBJECTIONS                                           -->
@@ -431,7 +555,7 @@
 <!-- ============================================================ -->
 <!-- PAIRING STYLES                                               -->
 <!-- ============================================================ -->
-<section class="section">
+<section class="section section-alt">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Methods</p>
@@ -469,7 +593,7 @@
 <!-- ============================================================ -->
 <!-- WHEN TO PAIR                                                 -->
 <!-- ============================================================ -->
-<section class="section section-alt">
+<section class="section">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Decision</p>
@@ -521,7 +645,7 @@
 <!-- ============================================================ -->
 <!-- SESSION STRUCTURE                                            -->
 <!-- ============================================================ -->
-<section class="section">
+<section class="section section-alt">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Rhythm</p>
@@ -580,7 +704,7 @@
 <!-- ============================================================ -->
 <!-- PRACTICAL EXAMPLE                                            -->
 <!-- ============================================================ -->
-<section class="section section-alt">
+<section class="section">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">In Practice</p>
@@ -699,9 +823,151 @@
 </section>
 
 <!-- ============================================================ -->
-<!-- MOB PROGRAMMING                                              -->
+<!-- ACT IV — MODERN CONTEXT                                      -->
+<!-- ============================================================ -->
+
+<!-- ============================================================ -->
+<!-- THE 2026 QUESTION                                            -->
+<!-- ============================================================ -->
+<section class="section section-alt">
+	<div class="container">
+		<ScrollReveal>
+			<p class="label">The Elephant in the Room</p>
+			<h2>But It's 2026.</h2>
+		</ScrollReveal>
+		<ScrollReveal delay={150}>
+			<p class="lead">
+				AI is fast. Work is parallelized. Why would you pair?
+			</p>
+		</ScrollReveal>
+		<ScrollReveal delay={200}>
+			<p class="body">
+				You've seen the techniques. You know the human challenges. Now let's talk about the machine in the room.
+			</p>
+		</ScrollReveal>
+
+		<div class="objections">
+			<ScrollReveal delay={250}>
+				<div class="objection">
+					<div class="objection-quote">
+						<p>"Why would I work on a feature with Jonathan? He's in a meeting, I have time — with a snap of my fingers it's done."</p>
+					</div>
+				</div>
+			</ScrollReveal>
+			<ScrollReveal delay={400}>
+				<div class="objection">
+					<div class="objection-quote">
+						<p>"That really costs a lot of time — waiting for the other person, spending energy to engage with them."</p>
+					</div>
+				</div>
+			</ScrollReveal>
+			<ScrollReveal delay={550}>
+				<div class="objection">
+					<div class="objection-quote">
+						<p>"Why would I even want to know how it works in detail if the AI just conjures it up for me?"</p>
+					</div>
+				</div>
+			</ScrollReveal>
+		</div>
+
+		<ScrollReveal delay={700}>
+			<p class="body" style="margin-top: 2rem;">
+				These aren't beginner thoughts. These are <strong>real questions</strong>. And just like the human challenges we explored earlier, they deserve honest answers.
+			</p>
+		</ScrollReveal>
+
+		<ScrollReveal delay={850}>
+			<div class="answers">
+				<div class="answer">
+					<h3>AI generates code. Not understanding.</h3>
+					<p>When the system breaks at 2 AM, you need someone who <em>understands</em> the code. Pairing builds that in two people at once.</p>
+				</div>
+				<div class="answer">
+					<h3>Speed isn't the bottleneck.</h3>
+					<p>Fast in the wrong direction is just expensive. A navigator catches wrong turns early.</p>
+				</div>
+				<div class="answer">
+					<h3>Solo + AI = knowledge silos.</h3>
+					<p>Everyone grabs their task, AI handles it, nobody understands anyone else's code. Bus factor drops to one.</p>
+				</div>
+				<div class="answer">
+					<h3>Some problems need two humans.</h3>
+					<p>Architecture. Security. Domain logic. The kind of work where someone needs to say "wait, that doesn't make sense."</p>
+				</div>
+			</div>
+		</ScrollReveal>
+
+		<ScrollReveal delay={1000}>
+			<div class="callout">
+				<span class="callout-icon">&#x1F9F0;</span>
+				<p><strong>A tool for your toolbox</strong> — for when it's time to look at something really carefully.</p>
+			</div>
+		</ScrollReveal>
+	</div>
+</section>
+
+<!-- ============================================================ -->
+<!-- AI WORKFLOWS                                                 -->
 <!-- ============================================================ -->
 <section class="section">
+	<div class="container">
+		<ScrollReveal>
+			<p class="label">Human + Machine</p>
+			<h2>AI Workflows</h2>
+		</ScrollReveal>
+		<ScrollReveal delay={150}>
+			<p class="lead">
+				AI assistants are fast, tireless, and never feel awkward. But they never push back, never ask "does this actually make sense?"
+			</p>
+		</ScrollReveal>
+		<div class="ai-grid">
+			<ScrollReveal delay={250}>
+				<div class="card ai-card ai-human">
+					<h3>Pair with a Human</h3>
+					<ul>
+						<li>Architecture &amp; system design</li>
+						<li>Security-critical code</li>
+						<li>Domain logic &amp; business rules</li>
+						<li>Onboarding &amp; knowledge transfer</li>
+						<li>Challenging assumptions</li>
+					</ul>
+				</div>
+			</ScrollReveal>
+			<ScrollReveal delay={400}>
+				<div class="card ai-card ai-machine">
+					<h3>Let AI Assist</h3>
+					<ul>
+						<li>Boilerplate &amp; scaffolding</li>
+						<li>Isolated, well-defined tasks</li>
+						<li>Prototyping &amp; spike work</li>
+						<li>Repetitive refactoring</li>
+						<li>Test generation</li>
+					</ul>
+				</div>
+			</ScrollReveal>
+		</div>
+		<ScrollReveal delay={500}>
+			<div class="callout">
+				<span class="callout-icon">&#x21C4;</span>
+				<p><strong>The hybrid session:</strong> AI generates a draft. Two humans pair-review and refine. You get speed <em>and</em> understanding.</p>
+			</div>
+		</ScrollReveal>
+		<ScrollReveal delay={600}>
+			<div class="key-takeaway" style="margin-top: 2rem;">
+				<p>AI makes solo coding faster. Pair programming makes team understanding deeper. <strong>The best teams use both.</strong></p>
+			</div>
+		</ScrollReveal>
+	</div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ACT V — EXTENSIONS & WRAP-UP                                 -->
+<!-- ============================================================ -->
+
+<!-- ============================================================ -->
+<!-- MOB PROGRAMMING                                              -->
+<!-- ============================================================ -->
+<section class="section section-alt">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">Beyond Pairing</p>
@@ -789,7 +1055,7 @@
 <!-- ============================================================ -->
 <!-- REMOTE PAIRING                                               -->
 <!-- ============================================================ -->
-<section class="section section-alt">
+<section class="section">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">Distributed Teams</p>
@@ -834,7 +1100,7 @@
 <!-- ============================================================ -->
 <!-- BEST PRACTICES                                               -->
 <!-- ============================================================ -->
-<section class="section">
+<section class="section section-alt">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Playbook</p>
@@ -954,6 +1220,18 @@
 					<p>Fatigue, personality clashes, disengaged navigators, backseat driving.</p>
 				</div>
 				<div class="summary-card">
+					<h3>Safety</h3>
+					<p>Pairing requires vulnerability. Build psychological safety first — normalise not-knowing, start low-stakes, celebrate mistakes.</p>
+				</div>
+				<div class="summary-card">
+					<h3>AI</h3>
+					<p>Use AI for boilerplate and prototyping. Use human pairs for architecture, security, and shared understanding.</p>
+				</div>
+				<div class="summary-card">
+					<h3>The Human Problem</h3>
+					<p>Most teams don't pair because it feels unsafe, not because it doesn't work. Fix the culture, then the process.</p>
+				</div>
+				<div class="summary-card">
 					<h3>Remote</h3>
 					<p>VS Code Live Share, good audio, over-communicate, driver's cursor, more breaks.</p>
 				</div>
@@ -1032,27 +1310,21 @@
 						<p class="source-meta">Belshee, A. (2005). Agile Development Conference (ADC'05), IEEE.</p>
 					</div>
 				</div>
+				<div class="source">
+					<span class="source-num">8</span>
+					<div>
+						<a href="https://www.amazon.com/Fearless-Organization-Psychological-Workplace-Innovation/dp/1119477247" target="_blank" rel="noopener" class="source-title">The Fearless Organization: Creating Psychological Safety in the Workplace</a>
+						<p class="source-meta">Edmondson, A.C. (2018). Wiley.</p>
+					</div>
+				</div>
+				<div class="source">
+					<span class="source-num">9</span>
+					<div>
+						<a href="https://rework.withgoogle.com/guides/understanding-team-effectiveness/" target="_blank" rel="noopener" class="source-title">Project Aristotle: Understanding Team Effectiveness</a>
+						<p class="source-meta">Google re:Work (2015). Psychological safety as the #1 factor in high-performing teams.</p>
+					</div>
+				</div>
 			</div>
-		</ScrollReveal>
-	</div>
-</section>
-
-<!-- ============================================================ -->
-<!-- TEAM QUIZ RESULTS                                            -->
-<!-- ============================================================ -->
-<section class="section section-alt" id="team-results">
-	<div class="container">
-		<ScrollReveal>
-			<p class="label">Your Team</p>
-			<h2>How Safe Does Your Team Feel?</h2>
-		</ScrollReveal>
-		<ScrollReveal delay={150}>
-			<p class="lead">
-				Take the psychological safety quiz and see how your team really feels about coding together.
-			</p>
-		</ScrollReveal>
-		<ScrollReveal delay={300}>
-			<TeamResults />
 		</ScrollReveal>
 	</div>
 </section>
@@ -1451,6 +1723,59 @@
 		background-clip: text;
 		margin-bottom: 0.5rem;
 		line-height: 1.2;
+	}
+
+	/* ── Barrier Grid (Why It Hasn't Caught On) ──────────────── */
+	.barrier-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1.25rem;
+		margin-top: 1.5rem;
+	}
+
+	@media (max-width: 640px) {
+		.barrier-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	.barrier-card h3 {
+		color: #fb923c;
+		margin-bottom: 0.75rem;
+	}
+
+	.barrier-card p {
+		color: var(--text-secondary);
+		font-size: 0.9rem;
+		line-height: 1.6;
+	}
+
+	/* ── AI Workflows Grid ───────────────────────────────────── */
+	.ai-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1.25rem;
+		margin: 1.5rem 0;
+	}
+
+	@media (max-width: 640px) {
+		.ai-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	.ai-human h3 {
+		color: #818cf8;
+		border-bottom: 2px solid rgba(129, 140, 248, 0.3);
+		padding-bottom: 0.75rem;
+		margin-bottom: 1rem;
+	}
+
+	.ai-machine h3 {
+		color: #34d399;
+		border-bottom: 2px solid rgba(52, 211, 153, 0.3);
+		padding-bottom: 0.75rem;
+		margin-bottom: 1rem;
 	}
 
 	/* ── Pitfalls ────────────────────────────────────────────── */
@@ -1996,6 +2321,101 @@
 		font-size: 0.85rem;
 		color: var(--text-muted);
 		line-height: 1.5;
+	}
+
+	/* ── Origin Scroll Section ──────────────────────────────── */
+	.origin-scroll {
+		position: relative;
+		height: 300vh;
+	}
+
+	.origin-sticky {
+		position: sticky;
+		top: 0;
+		min-height: 100vh;
+		display: flex;
+		align-items: center;
+		padding: 4rem 0;
+	}
+
+	.origin-phase {
+		opacity: 0;
+		transform: translateY(20px);
+		transition: opacity 0.5s ease, transform 0.5s ease;
+		position: absolute;
+		width: 100%;
+		pointer-events: none;
+	}
+
+	.origin-phase.origin-visible {
+		opacity: 1;
+		transform: translateY(0);
+		position: relative;
+		pointer-events: auto;
+	}
+
+	.origin-portraits {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 2rem;
+		margin-top: 2rem;
+	}
+
+	.origin-portrait {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
+	.origin-portrait img {
+		width: 100%;
+		max-width: 180px;
+		aspect-ratio: 1;
+		object-fit: cover;
+		border-radius: var(--radius);
+		border: 1px solid var(--border);
+		filter: grayscale(0.3);
+		transition: filter 0.3s ease;
+	}
+
+	.origin-portrait img:hover {
+		filter: grayscale(0);
+	}
+
+	.origin-portrait span {
+		font-size: 0.95rem;
+		font-weight: 600;
+		color: var(--text-secondary);
+	}
+
+	.origin-bullets {
+		list-style: none;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.origin-bullets li {
+		padding: 0.75rem 1rem;
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-sm);
+		color: var(--text-secondary);
+		font-size: 1rem;
+		line-height: 1.6;
+	}
+
+	@media (max-width: 768px) {
+		.origin-portraits {
+			grid-template-columns: repeat(2, 1fr);
+			gap: 1.5rem;
+		}
+
+		.origin-portrait img {
+			max-width: 140px;
+		}
 	}
 
 	/* ── Era Tag (History Section) ───────────────────────────── */
