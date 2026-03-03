@@ -63,58 +63,52 @@
 	// Class nodes data
 	type CNode = { id: string; label: string; x: number; y: number; w: number; layer: string; red?: boolean };
 	const classNodes: CNode[] = [
-		// Config
-		{ id: 'appConfig',  label: 'AppConfig',  x: 250, y: 14,  w: 84,  layer: 'config' },
-		{ id: 'routes',     label: 'Routes',     x: 355, y: 22,  w: 62,  layer: 'config' },
-		// UI
-		{ id: 'loginPage',  label: 'LoginPage',  x: 80,  y: 78,  w: 82,  layer: 'ui' },
-		{ id: 'dashboard',  label: 'Dashboard',  x: 200, y: 84,  w: 82,  layer: 'ui', red: true },
-		{ id: 'userProf',   label: 'UserProfile', x: 330, y: 78,  w: 88,  layer: 'ui' },
-		{ id: 'settings',   label: 'SettingsView', x: 460, y: 84, w: 96,  layer: 'ui' },
-		// Services
-		{ id: 'authSvc',    label: 'AuthService', x: 18,  y: 155, w: 88,  layer: 'svc' },
-		{ id: 'userSvc',    label: 'UserService', x: 18,  y: 188, w: 86,  layer: 'svc', red: true },
-		// ViewModels
-		{ id: 'loginVM',    label: 'LoginVM',    x: 200, y: 155, w: 72,  layer: 'svc' },
-		{ id: 'dashVM',     label: 'DashboardVM', x: 195, y: 188, w: 98, layer: 'svc', red: true },
-		{ id: 'profVM',     label: 'ProfileVM',  x: 345, y: 168, w: 78,  layer: 'svc' },
-		// DTOs
-		{ id: 'userDTO',    label: 'UserDTO',    x: 510, y: 155, w: 70,  layer: 'svc' },
-		{ id: 'confDTO',    label: 'ConfigDTO',  x: 510, y: 186, w: 80,  layer: 'svc' },
-		// Use Cases
-		{ id: 'loginUC',    label: 'Login',       x: 135, y: 255, w: 64,  layer: 'uc' },
-		{ id: 'getUserUC',  label: 'GetUser',     x: 260, y: 260, w: 70,  layer: 'uc', red: true },
-		{ id: 'updateUC',   label: 'UpdateProfile', x: 410, y: 255, w: 104, layer: 'uc' },
-		// Domain
-		{ id: 'user',       label: 'User',       x: 200, y: 335, w: 52,  layer: 'domain' },
-		{ id: 'role',       label: 'Role',       x: 280, y: 340, w: 48,  layer: 'domain' },
-		{ id: 'settingsDom', label: 'Settings',  x: 365, y: 335, w: 66,  layer: 'domain' },
+		// ── Config ──
+		{ id: 'appConfig',    label: 'AppConfig',        x: 255, y: 14,  w: 84,  layer: 'config' },
+		{ id: 'routes',       label: 'Routes',           x: 365, y: 22,  w: 62,  layer: 'config' },
+		// ── UI ──
+		{ id: 'loginPage',    label: 'LoginPage',        x: 28,  y: 78,  w: 82,  layer: 'ui' },
+		{ id: 'dashboard',    label: 'Dashboard',        x: 150, y: 85,  w: 82,  layer: 'ui' },
+		{ id: 'labPanel',     label: 'LabPanel',         x: 320, y: 78,  w: 76,  layer: 'ui' },
+		{ id: 'protEditor',   label: 'ProtocolEditor',   x: 460, y: 85,  w: 110, layer: 'ui' },
+		// ── Services / VMs / DTOs ──
+		{ id: 'authSvc',      label: 'AuthService',      x: 12,  y: 152, w: 88,  layer: 'svc' },
+		{ id: 'loginVM',      label: 'LoginVM',          x: 12,  y: 186, w: 72,  layer: 'svc' },
+		{ id: 'labPanelVM',   label: 'LabPanelVM',       x: 195, y: 152, w: 92,  layer: 'svc' },
+		{ id: 'protocolVM',   label: 'ProtocolVM',       x: 195, y: 186, w: 88,  layer: 'svc' },
+		{ id: 'jsonExporter', label: 'JsonExporter',     x: 375, y: 160, w: 96,  layer: 'svc' },
+		{ id: 'userDTO',      label: 'UserDTO',          x: 545, y: 168, w: 70,  layer: 'svc' },
+		// ── Use Cases ──
+		{ id: 'loginUC',      label: 'Login',            x: 48,  y: 255, w: 56,  layer: 'uc' },
+		{ id: 'runProtocol',  label: 'RunProtocol',      x: 230, y: 250, w: 96,  layer: 'uc' },
+		{ id: 'exportData',   label: 'ExportData',       x: 430, y: 255, w: 86,  layer: 'uc' },
+		// ── Domain ──
+		{ id: 'user',         label: 'User',             x: 55,  y: 338, w: 52,  layer: 'domain' },
+		{ id: 'liquidHandler',label: 'LiquidHandler',    x: 210, y: 332, w: 106, layer: 'domain' },
+		{ id: 'protocol',     label: 'Protocol',         x: 420, y: 338, w: 72,  layer: 'domain' },
 	];
 
 	type Conn = { from: string; to: string; red?: boolean };
 	const connections: Conn[] = [
-		// UI → VM
-		{ from: 'loginPage', to: 'loginVM' },
-		{ from: 'dashboard', to: 'dashVM', red: true },
-		{ from: 'userProf',  to: 'profVM' },
-		{ from: 'settings',  to: 'profVM' },
-		// VM → Service
-		{ from: 'loginVM',   to: 'authSvc' },
-		{ from: 'dashVM',    to: 'userSvc', red: true },
-		// VM → Use Case
-		{ from: 'loginVM',   to: 'loginUC' },
-		{ from: 'dashVM',    to: 'getUserUC', red: true },
-		{ from: 'profVM',    to: 'updateUC' },
-		// Use Case → Domain
-		{ from: 'loginUC',   to: 'user' },
-		{ from: 'getUserUC', to: 'user', red: true },
-		{ from: 'updateUC',  to: 'settingsDom' },
-		// Config → UI
-		{ from: 'appConfig', to: 'loginPage' },
-		{ from: 'routes',    to: 'dashboard', red: true },
-		// Service → DTO
-		{ from: 'authSvc',   to: 'userDTO' },
-		{ from: 'userSvc',   to: 'confDTO', red: true },
+		// ── Stable chain (User / Login) ──
+		{ from: 'loginPage',    to: 'loginVM' },
+		{ from: 'loginVM',      to: 'loginUC' },
+		{ from: 'loginVM',      to: 'authSvc' },
+		{ from: 'loginUC',      to: 'user' },
+		{ from: 'authSvc',      to: 'userDTO' },
+		{ from: 'appConfig',    to: 'loginPage' },
+		{ from: 'routes',       to: 'dashboard' },
+		// ── Volatile chain (Lab Handling) — turns red ──
+		{ from: 'labPanel',     to: 'labPanelVM',   red: true },
+		{ from: 'protEditor',   to: 'protocolVM',   red: true },
+		{ from: 'dashboard',    to: 'labPanelVM',   red: true },
+		{ from: 'labPanelVM',   to: 'runProtocol',  red: true },
+		{ from: 'labPanelVM',   to: 'jsonExporter', red: true },
+		{ from: 'protocolVM',   to: 'runProtocol',  red: true },
+		{ from: 'runProtocol',  to: 'liquidHandler', red: true },
+		{ from: 'runProtocol',  to: 'protocol',     red: true },
+		{ from: 'exportData',   to: 'protocol',     red: true },
+		{ from: 'jsonExporter', to: 'exportData',   red: true },
 	];
 
 	function nodeById(id: string) { return classNodes.find(n => n.id === id)!; }
@@ -711,8 +705,7 @@
 									<rect
 										x={n.x} y={n.y} width={n.w} height={26} rx={5}
 										class="cnode cnode-{n.layer}"
-										class:cnode-trigger={n.id === 'getUserUC' && cpxRed > 0.5}
-										class:cnode-affected={n.red && n.id !== 'getUserUC' && cpxRed > 0.5}
+										class:cnode-trigger={n.id === 'runProtocol' && cpxRed > 0.5}
 									/>
 									<text x={n.x + n.w / 2} y={n.y + 16} class="cnode-label">{n.label}</text>
 								</g>
@@ -744,7 +737,7 @@
 					</p>
 					<div class="era-tag" style="margin-top: 1.5rem;">
 						<span class="era-dot"></span>
-						<p>Use Cases, Viewmodels, and IO Services are where pairing pays off. Domain and DTOs are usually stable enough for solo work.</p>
+						<p>The User login barely changes. But the lab handling chain? One new pipetting requirement and everything from Use Case to UI needs to adapt. That's where pairing pays off.</p>
 					</div>
 				</div>
 			</div>
