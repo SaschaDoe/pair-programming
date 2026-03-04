@@ -15,6 +15,32 @@
 	} from '$lib/data/presentationContent';
 
 	let tocOpen = $state(false);
+	let activeSection = $state('');
+
+	const tocSections = [
+		'what', 'roles', 'loops', 'expertise', 'mentoring', 'reviews',
+		'combined-loops', 'why', 'human-problem', 'team-results', 'safety',
+		'objections', 'pitfalls', 'styles', 'when', 'session', 'ping-pong',
+		'2026', 'ai-workflows', 'mob', 'remote', 'best-practices', 'summary', 'sources'
+	];
+
+	$effect(() => {
+		const observer = new IntersectionObserver(
+			(entries) => {
+				for (const entry of entries) {
+					if (entry.isIntersecting) {
+						activeSection = entry.target.id;
+					}
+				}
+			},
+			{ rootMargin: '-20% 0px -60% 0px' }
+		);
+		for (const id of tocSections) {
+			const el = document.getElementById(id);
+			if (el) observer.observe(el);
+		}
+		return () => observer.disconnect();
+	});
 
 	// ── Interactive Review Formula (from CodeReviewWithAI) ──────
 	let contentSize = $state(25);
@@ -371,58 +397,66 @@
 </section>
 
 <!-- ============================================================ -->
-<!-- TABLE OF CONTENTS                                            -->
+<!-- TABLE OF CONTENTS — fixed sidebar                            -->
 <!-- ============================================================ -->
-<div class="toc-wrapper">
-	<button class="toc-toggle" onclick={() => tocOpen = !tocOpen} aria-expanded={tocOpen}>
-		<svg class="toc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-			<line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="15" y2="12" /><line x1="3" y1="18" x2="9" y2="18" />
-		</svg>
-		<span>Table of Contents</span>
-		<svg class="toc-chevron" class:toc-chevron-open={tocOpen} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-			<polyline points="6 9 12 15 18 9" />
-		</svg>
-	</button>
-	{#if tocOpen}
-		<nav class="toc-nav" aria-label="Table of contents">
-			<p class="toc-group-label">Foundation</p>
-			<a href="#what" class="toc-link" onclick={() => tocOpen = false}>What is Pair Programming?</a>
-			<a href="#roles" class="toc-link" onclick={() => tocOpen = false}>Driver &amp; Navigator</a>
+<button class="toc-tab" onclick={() => tocOpen = !tocOpen} aria-expanded={tocOpen} aria-label="Toggle table of contents">
+	<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="15" y2="12" /><line x1="3" y1="18" x2="9" y2="18" />
+	</svg>
+</button>
 
-			<p class="toc-group-label">The Science</p>
-			<a href="#loops" class="toc-link" onclick={() => tocOpen = false}>Small Loops Win</a>
-			<a href="#expertise" class="toc-link" onclick={() => tocOpen = false}>The Expertise Function</a>
-			<a href="#mentoring" class="toc-link" onclick={() => tocOpen = false}>Mentoring Compounds Fast</a>
-			<a href="#reviews" class="toc-link" onclick={() => tocOpen = false}>Reviews Need Codebase Knowledge</a>
-			<a href="#combined-loops" class="toc-link" onclick={() => tocOpen = false}>Two Loops, One Workflow</a>
-			<a href="#why" class="toc-link" onclick={() => tocOpen = false}>Why Pair Program?</a>
+{#if tocOpen}
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<div class="toc-backdrop" onclick={() => tocOpen = false}></div>
+{/if}
 
-			<p class="toc-group-label">The Human Side</p>
-			<a href="#human-problem" class="toc-link" onclick={() => tocOpen = false}>Why It Hasn't Caught On</a>
-			<a href="#team-results" class="toc-link" onclick={() => tocOpen = false}>How Safe Does Your Team Feel?</a>
-			<a href="#safety" class="toc-link" onclick={() => tocOpen = false}>What We Can Do</a>
+<nav class="toc-sidebar" class:toc-sidebar-open={tocOpen} aria-label="Table of contents">
+	<div class="toc-header">
+		<span class="toc-title">Contents</span>
+		<button class="toc-close" onclick={() => tocOpen = false} aria-label="Close">
+			<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+			</svg>
+		</button>
+	</div>
+	<div class="toc-scroll">
+		<p class="toc-group-label">Foundation</p>
+		<a href="#what" class="toc-link" class:toc-active={activeSection === 'what'}>What is Pair Programming?</a>
+		<a href="#roles" class="toc-link" class:toc-active={activeSection === 'roles'}>Driver &amp; Navigator</a>
 
-			<p class="toc-group-label">Practice</p>
-			<a href="#objections" class="toc-link" onclick={() => tocOpen = false}>Classic Objections</a>
-			<a href="#pitfalls" class="toc-link" onclick={() => tocOpen = false}>Common Pitfalls</a>
-			<a href="#styles" class="toc-link" onclick={() => tocOpen = false}>Pairing Styles</a>
-			<a href="#when" class="toc-link" onclick={() => tocOpen = false}>When to Pair</a>
-			<a href="#session" class="toc-link" onclick={() => tocOpen = false}>Session Structure</a>
-			<a href="#ping-pong" class="toc-link" onclick={() => tocOpen = false}>Ping-Pong Pairing</a>
+		<p class="toc-group-label">The Science</p>
+		<a href="#loops" class="toc-link" class:toc-active={activeSection === 'loops'}>Small Loops Win</a>
+		<a href="#expertise" class="toc-link" class:toc-active={activeSection === 'expertise'}>The Expertise Function</a>
+		<a href="#mentoring" class="toc-link" class:toc-active={activeSection === 'mentoring'}>Mentoring Compounds Fast</a>
+		<a href="#reviews" class="toc-link" class:toc-active={activeSection === 'reviews'}>Reviews Need Codebase Knowledge</a>
+		<a href="#combined-loops" class="toc-link" class:toc-active={activeSection === 'combined-loops'}>Two Loops, One Workflow</a>
+		<a href="#why" class="toc-link" class:toc-active={activeSection === 'why'}>Why Pair Program?</a>
 
-			<p class="toc-group-label">Modern Context</p>
-			<a href="#2026" class="toc-link" onclick={() => tocOpen = false}>But It's 2026</a>
-			<a href="#ai-workflows" class="toc-link" onclick={() => tocOpen = false}>AI Workflows</a>
-			<a href="#mob" class="toc-link" onclick={() => tocOpen = false}>Mob Programming</a>
-			<a href="#remote" class="toc-link" onclick={() => tocOpen = false}>Remote Pairing</a>
-			<a href="#best-practices" class="toc-link" onclick={() => tocOpen = false}>Best Practices</a>
+		<p class="toc-group-label">The Human Side</p>
+		<a href="#human-problem" class="toc-link" class:toc-active={activeSection === 'human-problem'}>Why It Hasn't Caught On</a>
+		<a href="#team-results" class="toc-link" class:toc-active={activeSection === 'team-results'}>How Safe Does Your Team Feel?</a>
+		<a href="#safety" class="toc-link" class:toc-active={activeSection === 'safety'}>What We Can Do</a>
 
-			<p class="toc-group-label">Wrap-Up</p>
-			<a href="#summary" class="toc-link" onclick={() => tocOpen = false}>Summary</a>
-			<a href="#sources" class="toc-link" onclick={() => tocOpen = false}>Sources</a>
-		</nav>
-	{/if}
-</div>
+		<p class="toc-group-label">Practice</p>
+		<a href="#objections" class="toc-link" class:toc-active={activeSection === 'objections'}>Classic Objections</a>
+		<a href="#pitfalls" class="toc-link" class:toc-active={activeSection === 'pitfalls'}>Common Pitfalls</a>
+		<a href="#styles" class="toc-link" class:toc-active={activeSection === 'styles'}>Pairing Styles</a>
+		<a href="#when" class="toc-link" class:toc-active={activeSection === 'when'}>When to Pair</a>
+		<a href="#session" class="toc-link" class:toc-active={activeSection === 'session'}>Session Structure</a>
+		<a href="#ping-pong" class="toc-link" class:toc-active={activeSection === 'ping-pong'}>Ping-Pong Pairing</a>
+
+		<p class="toc-group-label">Modern Context</p>
+		<a href="#2026" class="toc-link" class:toc-active={activeSection === '2026'}>But It's 2026</a>
+		<a href="#ai-workflows" class="toc-link" class:toc-active={activeSection === 'ai-workflows'}>AI Workflows</a>
+		<a href="#mob" class="toc-link" class:toc-active={activeSection === 'mob'}>Mob Programming</a>
+		<a href="#remote" class="toc-link" class:toc-active={activeSection === 'remote'}>Remote Pairing</a>
+		<a href="#best-practices" class="toc-link" class:toc-active={activeSection === 'best-practices'}>Best Practices</a>
+
+		<p class="toc-group-label">Wrap-Up</p>
+		<a href="#summary" class="toc-link" class:toc-active={activeSection === 'summary'}>Summary</a>
+		<a href="#sources" class="toc-link" class:toc-active={activeSection === 'sources'}>Sources</a>
+	</div>
+</nav>
 
 <!-- ============================================================ -->
 <!-- THE VISUAL — standalone                                      -->
@@ -1374,7 +1408,7 @@
 			<h2>Mob Programming</h2>
 		</ScrollReveal>
 		<ScrollReveal delay={150}>
-			<img src="/pics/9399ac86e9427b327882e36d52e1c0de.jpg" alt="Mob programming street edition — one worker digging while many others stand around watching" class="section-image" />
+			<img src="/pics/9399ac86e9427b327882e36d52e1c0de.jpg" alt="Mob programming street edition — one worker digging while many others stand around watching" class="section-image" style="max-width: 340px;" />
 		</ScrollReveal>
 		<ScrollReveal delay={250}>
 			<p class="lead">
@@ -1603,77 +1637,120 @@
 <!-- STYLES                                                       -->
 <!-- ============================================================ -->
 <style>
-	/* ── Table of Contents ───────────────────────────────────── */
-	.toc-wrapper {
-		max-width: 720px;
-		margin: 0 auto;
-		padding: 0 1.5rem;
-	}
-
-	.toc-toggle {
+	/* ── Table of Contents — fixed sidebar ───────────────────── */
+	.toc-tab {
+		position: fixed;
+		top: 50%;
+		left: 0;
+		transform: translateY(-50%);
+		z-index: 100;
+		width: 40px;
+		height: 40px;
 		display: flex;
 		align-items: center;
-		gap: 0.6rem;
-		width: 100%;
-		padding: 0.85rem 1.25rem;
-		background: var(--bg-card);
-		border: 1px solid var(--border);
-		border-radius: var(--radius);
-		color: var(--text-secondary);
-		font-size: 0.85rem;
-		font-weight: 600;
+		justify-content: center;
+		background: #111113;
+		border: 1px solid var(--border-bright);
+		border-left: none;
+		border-radius: 0 8px 8px 0;
+		color: var(--text-muted);
 		cursor: pointer;
-		transition: background 0.2s, border-color 0.2s, color 0.2s;
+		transition: background 0.2s, color 0.2s, border-color 0.2s;
 	}
 
-	.toc-toggle:hover {
+	.toc-tab:hover {
 		background: var(--bg-card-hover);
 		border-color: var(--border-bright);
 		color: var(--text-primary);
 	}
 
-	.toc-icon {
+	.toc-tab svg {
 		width: 18px;
 		height: 18px;
-		flex-shrink: 0;
 	}
 
-	.toc-chevron {
-		width: 16px;
-		height: 16px;
-		margin-left: auto;
-		flex-shrink: 0;
+	.toc-backdrop {
+		position: fixed;
+		inset: 0;
+		z-index: 199;
+		background: rgba(0, 0, 0, 0.5);
+		backdrop-filter: blur(2px);
+	}
+
+	.toc-sidebar {
+		position: fixed;
+		top: 0;
+		left: 0;
+		bottom: 0;
+		z-index: 200;
+		width: 280px;
+		background: #111113;
+		border-right: 1px solid var(--border-bright);
+		display: flex;
+		flex-direction: column;
+		transform: translateX(-100%);
 		transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 	}
 
-	.toc-chevron-open {
-		transform: rotate(180deg);
+	.toc-sidebar-open {
+		transform: translateX(0);
 	}
 
-	.toc-nav {
+	.toc-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 1rem 1rem 0.75rem;
+		border-bottom: 1px solid var(--border);
+	}
+
+	.toc-title {
+		font-size: 0.8rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: var(--text-primary);
+	}
+
+	.toc-close {
+		width: 28px;
+		height: 28px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: none;
+		border: none;
+		color: var(--text-muted);
+		cursor: pointer;
+		border-radius: 6px;
+		transition: background 0.15s, color 0.15s;
+	}
+
+	.toc-close:hover {
+		background: var(--bg-card-hover);
+		color: var(--text-primary);
+	}
+
+	.toc-close svg {
+		width: 16px;
+		height: 16px;
+	}
+
+	.toc-scroll {
+		flex: 1;
+		overflow-y: auto;
+		padding: 0.5rem 0.75rem 1rem;
 		display: flex;
 		flex-direction: column;
-		gap: 0;
-		margin-top: 0.5rem;
-		padding: 0.75rem 1rem;
-		background: var(--bg-card);
-		border: 1px solid var(--border);
-		border-radius: var(--radius);
-		animation: toc-slide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-	}
-
-	@keyframes toc-slide {
-		from { opacity: 0; transform: translateY(-8px); }
-		to { opacity: 1; transform: translateY(0); }
 	}
 
 	.toc-group-label {
-		font-size: 0.65rem;
+		font-size: 0.6rem;
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
 		color: var(--text-muted);
-		padding: 0.6rem 0.5rem 0.25rem;
+		padding: 0.6rem 0.5rem 0.2rem;
 		margin: 0;
 	}
 
@@ -1682,17 +1759,24 @@
 	}
 
 	.toc-link {
-		padding: 0.35rem 0.5rem;
-		font-size: 0.8rem;
+		padding: 0.3rem 0.5rem;
+		font-size: 0.78rem;
 		color: var(--text-secondary);
 		text-decoration: none;
 		border-radius: 6px;
-		transition: background 0.15s, color 0.15s;
+		border-left: 2px solid transparent;
+		transition: background 0.15s, color 0.15s, border-color 0.15s;
 	}
 
 	.toc-link:hover {
 		background: var(--bg-card-hover);
 		color: var(--text-primary);
+	}
+
+	.toc-active {
+		color: var(--accent);
+		border-left-color: var(--accent);
+		background: color-mix(in srgb, var(--accent) 8%, transparent);
 	}
 
 	/* ── Hero ────────────────────────────────────────────────── */
