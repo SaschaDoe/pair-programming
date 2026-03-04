@@ -75,6 +75,17 @@ export interface XpBullet {
 	text: string;
 }
 
+export interface ExpertiseLayer {
+	id: string;
+	title: string;
+	subLabel: string;
+	color: string;
+	colorFaded: string;
+	sideContext?: string;
+	items: string[];
+	summary?: string;
+}
+
 // ── Data ───────────────────────────────────────────────────
 export const benefits: Benefit[] = [
 	{ stat: '&darr;', title: 'Fewer Defects', description: 'Significantly fewer bugs than solo code.' },
@@ -339,4 +350,55 @@ export const xpBullets: XpBullet[] = [
 	{ bold: 'Pair Programming', text: 'two minds, one keyboard' },
 	{ bold: 'Collective Code Ownership', text: 'anyone can change any code' },
 	{ bold: 'Simple Design', text: 'build only what you need right now' },
+];
+
+export const expertiseLayers: ExpertiseLayer[] = [
+	{
+		id: 'general',
+		title: 'General Expertise',
+		subLabel: 'AGC Language',
+		color: '#818cf8',
+		colorFaded: 'rgba(129, 140, 248, 0.12)',
+		items: [
+			'Register-based Logic',
+			'Self-modifying Code',
+			'GOTO Logic',
+			'Real-time System',
+		],
+		summary: 'General expertise in techniques relevant to the problem at hand!',
+	},
+	{
+		id: 'project',
+		title: 'Project-specific Expertise',
+		subLabel: 'Project Architecture',
+		color: '#a855f7',
+		colorFaded: 'rgba(168, 85, 247, 0.12)',
+		sideContext: 'Command Module vs. Lunar Module',
+		items: [
+			'Executive vs. Programs vs. Jobs vs. Tasks vs. Interrupts',
+			'Foreground / Background',
+			'Verb/Noun System',
+			'State Machine',
+			'Powered Descent Initiation',
+			'Breaking Phase',
+			'Approach Phase',
+			'Terminal Descent',
+			'Touchdown',
+			'Data Sources',
+		],
+	},
+	{
+		id: 'code',
+		title: 'Code Understanding',
+		subLabel: 'Hands-on & in Memory',
+		color: '#34d399',
+		colorFaded: 'rgba(52, 211, 153, 0.12)',
+		sideContext: 'Code Paths',
+		items: [
+			'Guidelines',
+			'What has failed before',
+			'How do other team members think?',
+			'Seeing the full stack',
+		],
+	},
 ];

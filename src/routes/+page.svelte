@@ -6,6 +6,8 @@
 	import ArchitectureDiagram from '$lib/components/ArchitectureDiagram.svelte';
 	import PracticalExample from '$lib/components/PracticalExample.svelte';
 	import PingPongDiagram from '$lib/components/PingPongDiagram.svelte';
+	import ExpertiseFormula from '$lib/components/ExpertiseFormula.svelte';
+	import CombinedLoopDiagram from '$lib/components/CombinedLoopDiagram.svelte';
 	import {
 		benefits, safetyTips, classicObjections, pitfalls, pairingStyles,
 		whenColumns, sessionSteps, bestPractices, summaryCards, sources,
@@ -608,6 +610,29 @@
 </section>
 
 <!-- ============================================================ -->
+<!-- SECTION: EXPERTISE FUNCTION                                   -->
+<!-- ============================================================ -->
+<section class="section">
+	<div class="container">
+		<ScrollReveal>
+			<p class="label">The Insight</p>
+			<h2>The Expertise Function</h2>
+		</ScrollReveal>
+
+		<ScrollReveal delay={250}>
+			<ExpertiseFormula />
+		</ScrollReveal>
+
+		<ScrollReveal delay={400}>
+			<div class="callout">
+				<span class="callout-icon">&rarr;</span>
+				<p>Pair programming builds <strong>all three layers simultaneously</strong> &mdash; in real time, not as an afterthought.</p>
+			</div>
+		</ScrollReveal>
+	</div>
+</section>
+
+<!-- ============================================================ -->
 <!-- SECTION 2: MENTORING COMPOUNDS                               -->
 <!-- ============================================================ -->
 <section class="section">
@@ -724,12 +749,6 @@
 			<p class="label">The Formula</p>
 			<h2>Reviews Need Codebase Knowledge</h2>
 		</ScrollReveal>
-		<ScrollReveal delay={150}>
-			<p class="lead">
-				Remember this? A reviewer who doesn't know the codebase is just scanning syntax. <strong>Drag the handle</strong> to see when meaningful review becomes impossible:
-			</p>
-		</ScrollReveal>
-
 		<!-- Interactive SVG Diagram (from CodeReviewWithAI) -->
 		<ScrollReveal delay={250}>
 			<div class="formula-diagram-wrap">
@@ -872,9 +891,25 @@
 </section>
 
 <!-- ============================================================ -->
-<!-- BENEFITS                                                     -->
+<!-- SECTION: COMBINED LOOPS — REVIEW FOCUS                       -->
 <!-- ============================================================ -->
 <section class="section">
+	<div class="container">
+		<ScrollReveal>
+			<p class="label">The Payoff</p>
+			<h2>Two Loops, One Workflow</h2>
+		</ScrollReveal>
+		<ScrollReveal delay={150}>
+			<CombinedLoopDiagram />
+		</ScrollReveal>
+
+	</div>
+</section>
+
+<!-- ============================================================ -->
+<!-- BENEFITS                                                     -->
+<!-- ============================================================ -->
+<section class="section section-alt">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Good</p>
