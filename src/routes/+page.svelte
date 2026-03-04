@@ -14,6 +14,8 @@
 		barriers, aiAnswers, modernObjections
 	} from '$lib/data/presentationContent';
 
+	let tocOpen = $state(false);
+
 	// ── Interactive Review Formula (from CodeReviewWithAI) ──────
 	let contentSize = $state(25);
 	let timePassed = $state(15);
@@ -369,6 +371,60 @@
 </section>
 
 <!-- ============================================================ -->
+<!-- TABLE OF CONTENTS                                            -->
+<!-- ============================================================ -->
+<div class="toc-wrapper">
+	<button class="toc-toggle" onclick={() => tocOpen = !tocOpen} aria-expanded={tocOpen}>
+		<svg class="toc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+			<line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="15" y2="12" /><line x1="3" y1="18" x2="9" y2="18" />
+		</svg>
+		<span>Table of Contents</span>
+		<svg class="toc-chevron" class:toc-chevron-open={tocOpen} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+			<polyline points="6 9 12 15 18 9" />
+		</svg>
+	</button>
+	{#if tocOpen}
+		<nav class="toc-nav" aria-label="Table of contents">
+			<p class="toc-group-label">Foundation</p>
+			<a href="#what" class="toc-link" onclick={() => tocOpen = false}>What is Pair Programming?</a>
+			<a href="#roles" class="toc-link" onclick={() => tocOpen = false}>Driver &amp; Navigator</a>
+
+			<p class="toc-group-label">The Science</p>
+			<a href="#loops" class="toc-link" onclick={() => tocOpen = false}>Small Loops Win</a>
+			<a href="#expertise" class="toc-link" onclick={() => tocOpen = false}>The Expertise Function</a>
+			<a href="#mentoring" class="toc-link" onclick={() => tocOpen = false}>Mentoring Compounds Fast</a>
+			<a href="#reviews" class="toc-link" onclick={() => tocOpen = false}>Reviews Need Codebase Knowledge</a>
+			<a href="#combined-loops" class="toc-link" onclick={() => tocOpen = false}>Two Loops, One Workflow</a>
+			<a href="#why" class="toc-link" onclick={() => tocOpen = false}>Why Pair Program?</a>
+
+			<p class="toc-group-label">The Human Side</p>
+			<a href="#human-problem" class="toc-link" onclick={() => tocOpen = false}>Why It Hasn't Caught On</a>
+			<a href="#team-results" class="toc-link" onclick={() => tocOpen = false}>How Safe Does Your Team Feel?</a>
+			<a href="#safety" class="toc-link" onclick={() => tocOpen = false}>What We Can Do</a>
+
+			<p class="toc-group-label">Practice</p>
+			<a href="#objections" class="toc-link" onclick={() => tocOpen = false}>Classic Objections</a>
+			<a href="#pitfalls" class="toc-link" onclick={() => tocOpen = false}>Common Pitfalls</a>
+			<a href="#styles" class="toc-link" onclick={() => tocOpen = false}>Pairing Styles</a>
+			<a href="#when" class="toc-link" onclick={() => tocOpen = false}>When to Pair</a>
+			<a href="#session" class="toc-link" onclick={() => tocOpen = false}>Session Structure</a>
+			<a href="#ping-pong" class="toc-link" onclick={() => tocOpen = false}>Ping-Pong Pairing</a>
+
+			<p class="toc-group-label">Modern Context</p>
+			<a href="#2026" class="toc-link" onclick={() => tocOpen = false}>But It's 2026</a>
+			<a href="#ai-workflows" class="toc-link" onclick={() => tocOpen = false}>AI Workflows</a>
+			<a href="#mob" class="toc-link" onclick={() => tocOpen = false}>Mob Programming</a>
+			<a href="#remote" class="toc-link" onclick={() => tocOpen = false}>Remote Pairing</a>
+			<a href="#best-practices" class="toc-link" onclick={() => tocOpen = false}>Best Practices</a>
+
+			<p class="toc-group-label">Wrap-Up</p>
+			<a href="#summary" class="toc-link" onclick={() => tocOpen = false}>Summary</a>
+			<a href="#sources" class="toc-link" onclick={() => tocOpen = false}>Sources</a>
+		</nav>
+	{/if}
+</div>
+
+<!-- ============================================================ -->
 <!-- THE VISUAL — standalone                                      -->
 <!-- ============================================================ -->
 <section class="section section-visual-hero">
@@ -394,7 +450,7 @@
 <!-- ============================================================ -->
 <!-- WHAT IS PAIR PROGRAMMING?                                    -->
 <!-- ============================================================ -->
-<section class="section section-alt">
+<section class="section section-alt" id="what">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Concept</p>
@@ -421,7 +477,7 @@
 <!-- ============================================================ -->
 <!-- THE TWO ROLES                                                -->
 <!-- ============================================================ -->
-<section class="section">
+<section class="section" id="roles">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Roles</p>
@@ -465,7 +521,7 @@
 <!-- ============================================================ -->
 <!-- SECTION 1: SMALL FEEDBACK LOOPS                              -->
 <!-- ============================================================ -->
-<section class="section section-alt">
+<section class="section section-alt" id="loops">
 	<div class="container" bind:this={loopSectionEl}>
 		<ScrollReveal>
 			<p class="label">The Foundation</p>
@@ -612,7 +668,7 @@
 <!-- ============================================================ -->
 <!-- SECTION: EXPERTISE FUNCTION                                   -->
 <!-- ============================================================ -->
-<section class="section">
+<section class="section" id="expertise">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Insight</p>
@@ -635,7 +691,7 @@
 <!-- ============================================================ -->
 <!-- SECTION 2: MENTORING COMPOUNDS                               -->
 <!-- ============================================================ -->
-<section class="section">
+<section class="section" id="mentoring">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Investment</p>
@@ -743,7 +799,7 @@
 <!-- ============================================================ -->
 <!-- SECTION 3: REVIEWS NEED INSIGHT (Interactive Formula)        -->
 <!-- ============================================================ -->
-<section class="section section-alt">
+<section class="section section-alt" id="reviews">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Formula</p>
@@ -893,7 +949,7 @@
 <!-- ============================================================ -->
 <!-- SECTION: COMBINED LOOPS — REVIEW FOCUS                       -->
 <!-- ============================================================ -->
-<section class="section">
+<section class="section" id="combined-loops">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Payoff</p>
@@ -909,7 +965,7 @@
 <!-- ============================================================ -->
 <!-- BENEFITS                                                     -->
 <!-- ============================================================ -->
-<section class="section section-alt">
+<section class="section section-alt" id="why">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Good</p>
@@ -936,7 +992,7 @@
 <!-- ============================================================ -->
 <!-- WHY IT HASN'T CAUGHT ON                                      -->
 <!-- ============================================================ -->
-<section class="section section-alt">
+<section class="section section-alt" id="human-problem">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Human Problem</p>
@@ -989,7 +1045,7 @@
 <!-- ============================================================ -->
 <!-- WHAT WE CAN DO                                               -->
 <!-- ============================================================ -->
-<section class="section section-alt">
+<section class="section section-alt" id="safety">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">Building Safety</p>
@@ -1029,7 +1085,7 @@
 <!-- ============================================================ -->
 <!-- CLASSIC OBJECTIONS                                           -->
 <!-- ============================================================ -->
-<section class="section">
+<section class="section" id="objections">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Timeless Pushback</p>
@@ -1055,7 +1111,7 @@
 <!-- ============================================================ -->
 <!-- PITFALLS                                                     -->
 <!-- ============================================================ -->
-<section class="section section-alt">
+<section class="section section-alt" id="pitfalls">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Challenges</p>
@@ -1088,7 +1144,7 @@
 <!-- ============================================================ -->
 <!-- PAIRING STYLES                                               -->
 <!-- ============================================================ -->
-<section class="section">
+<section class="section" id="styles">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Methods</p>
@@ -1112,7 +1168,7 @@
 <!-- ============================================================ -->
 <!-- WHEN TO PAIR                                                 -->
 <!-- ============================================================ -->
-<section class="section section-alt">
+<section class="section section-alt" id="when">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Decision</p>
@@ -1138,7 +1194,7 @@
 <!-- ============================================================ -->
 <!-- SESSION STRUCTURE                                            -->
 <!-- ============================================================ -->
-<section class="section">
+<section class="section" id="session">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Rhythm</p>
@@ -1168,7 +1224,7 @@
 <!-- ============================================================ -->
 <!-- TDD PING-PONG VISUALIZATION                                  -->
 <!-- ============================================================ -->
-<section class="section section-alt">
+<section class="section section-alt" id="ping-pong">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">TDD In Action</p>
@@ -1192,7 +1248,7 @@
 <!-- ============================================================ -->
 <!-- THE 2026 QUESTION                                            -->
 <!-- ============================================================ -->
-<section class="section">
+<section class="section" id="2026">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Elephant in the Room</p>
@@ -1253,7 +1309,7 @@
 <!-- ============================================================ -->
 <!-- AI WORKFLOWS                                                 -->
 <!-- ============================================================ -->
-<section class="section section-alt">
+<section class="section section-alt" id="ai-workflows">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">Human + Machine</p>
@@ -1311,7 +1367,7 @@
 <!-- ============================================================ -->
 <!-- MOB PROGRAMMING                                              -->
 <!-- ============================================================ -->
-<section class="section">
+<section class="section" id="mob">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">Beyond Pairing</p>
@@ -1402,7 +1458,7 @@
 <!-- ============================================================ -->
 <!-- REMOTE PAIRING                                               -->
 <!-- ============================================================ -->
-<section class="section section-alt">
+<section class="section section-alt" id="remote">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">Distributed Teams</p>
@@ -1447,7 +1503,7 @@
 <!-- ============================================================ -->
 <!-- BEST PRACTICES                                               -->
 <!-- ============================================================ -->
-<section class="section">
+<section class="section" id="best-practices">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Playbook</p>
@@ -1472,7 +1528,7 @@
 <!-- ============================================================ -->
 <!-- SUMMARY                                                      -->
 <!-- ============================================================ -->
-<section class="section section-alt">
+<section class="section section-alt" id="summary">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">At a Glance</p>
@@ -1501,7 +1557,7 @@
 <!-- ============================================================ -->
 <!-- SOURCES                                                      -->
 <!-- ============================================================ -->
-<section class="section section-sources">
+<section class="section section-sources" id="sources">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">References</p>
@@ -1547,6 +1603,98 @@
 <!-- STYLES                                                       -->
 <!-- ============================================================ -->
 <style>
+	/* ── Table of Contents ───────────────────────────────────── */
+	.toc-wrapper {
+		max-width: 720px;
+		margin: 0 auto;
+		padding: 0 1.5rem;
+	}
+
+	.toc-toggle {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		width: 100%;
+		padding: 0.85rem 1.25rem;
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		color: var(--text-secondary);
+		font-size: 0.85rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background 0.2s, border-color 0.2s, color 0.2s;
+	}
+
+	.toc-toggle:hover {
+		background: var(--bg-card-hover);
+		border-color: var(--border-bright);
+		color: var(--text-primary);
+	}
+
+	.toc-icon {
+		width: 18px;
+		height: 18px;
+		flex-shrink: 0;
+	}
+
+	.toc-chevron {
+		width: 16px;
+		height: 16px;
+		margin-left: auto;
+		flex-shrink: 0;
+		transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+	}
+
+	.toc-chevron-open {
+		transform: rotate(180deg);
+	}
+
+	.toc-nav {
+		display: flex;
+		flex-direction: column;
+		gap: 0;
+		margin-top: 0.5rem;
+		padding: 0.75rem 1rem;
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		animation: toc-slide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+	}
+
+	@keyframes toc-slide {
+		from { opacity: 0; transform: translateY(-8px); }
+		to { opacity: 1; transform: translateY(0); }
+	}
+
+	.toc-group-label {
+		font-size: 0.65rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: var(--text-muted);
+		padding: 0.6rem 0.5rem 0.25rem;
+		margin: 0;
+	}
+
+	.toc-group-label:first-child {
+		padding-top: 0.25rem;
+	}
+
+	.toc-link {
+		padding: 0.35rem 0.5rem;
+		font-size: 0.8rem;
+		color: var(--text-secondary);
+		text-decoration: none;
+		border-radius: 6px;
+		transition: background 0.15s, color 0.15s;
+	}
+
+	.toc-link:hover {
+		background: var(--bg-card-hover);
+		color: var(--text-primary);
+	}
+
 	/* ── Hero ────────────────────────────────────────────────── */
 	.hero {
 		position: relative;
