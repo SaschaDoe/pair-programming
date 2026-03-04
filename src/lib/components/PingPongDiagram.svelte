@@ -23,64 +23,22 @@
 	};
 
 	let stepIndex = $state(0);
-	let showSummary = $state(false);
-	let isVisible = $state(false);
-	let wrapper: HTMLElement | undefined = $state();
-	let reducedMotion = $state(false);
 
 	const current = $derived(steps[stepIndex]);
 	const color = $derived(phaseColor[current.phase]);
 	const aIsDriver = $derived(current.aRole === 'driver');
 	const bIsDriver = $derived(current.bRole === 'driver');
 
-	// Detect prefers-reduced-motion
-	$effect(() => {
-		const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-		reducedMotion = mq.matches;
-		const handler = (e: MediaQueryListEvent) => { reducedMotion = e.matches; };
-		mq.addEventListener('change', handler);
-		return () => mq.removeEventListener('change', handler);
-	});
-
-	// IntersectionObserver — pause when offscreen
-	$effect(() => {
-		if (!wrapper) return;
-		const observer = new IntersectionObserver(
-			([entry]) => { isVisible = entry.isIntersecting; },
-			{ threshold: 0.3 }
-		);
-		observer.observe(wrapper);
-		return () => observer.disconnect();
-	});
-
-	// Auto-advance timer
-	$effect(() => {
-		if (!isVisible || reducedMotion) return;
-		const delay = showSummary ? 3000 : 2500;
-		const id = setInterval(() => {
-			if (showSummary) {
-				showSummary = false;
-				stepIndex = 0;
-			} else if (stepIndex === steps.length - 1) {
-				showSummary = true;
-			} else {
-				stepIndex++;
-			}
-		}, delay);
-		return () => clearInterval(id);
-	});
-
 	function goToStep(i: number) {
-		showSummary = false;
 		stepIndex = i;
 	}
 </script>
 
-<div class="pp-diagram" bind:this={wrapper}>
+<div class="pp-diagram">
 	<!-- TDD Cycle track: Red → Green → Refactor ↩ -->
 	<div class="pp-track">
 		{#each phases as phase, i}
-			{@const isActive = !showSummary && current.phase === phase}
+			{@const isActive = current.phase === phase}
 			{@const c = phaseColor[phase]}
 			{#if i > 0}
 				<svg class="pp-arrow" viewBox="0 0 24 24" aria-hidden="true">
@@ -103,7 +61,7 @@
 	</div>
 
 	<!-- Main stage -->
-	<div class="pp-stage" class:pp-summary-active={showSummary}>
+	<div class="pp-stage">
 		<!-- Person A -->
 		<div class="pp-person" class:pp-active={aIsDriver} class:pp-faded={!aIsDriver}>
 			<svg class="pp-icon" viewBox="0 0 48 48" aria-hidden="true">
@@ -165,13 +123,6 @@
 			</span>
 		</div>
 
-		<!-- Summary overlay -->
-		{#if showSummary}
-			<div class="pp-overlay">
-				<p class="pp-overlay-title">2 Cycles Complete</p>
-				<p class="pp-overlay-text">Both devs have done every TDD phase.</p>
-			</div>
-		{/if}
 	</div>
 
 	<!-- Progress dots + cycle label -->
@@ -180,8 +131,8 @@
 			{#each steps as _, i}
 				<button
 					class="pp-dot"
-					class:pp-dot-active={i === stepIndex && !showSummary}
-					class:pp-dot-done={i < stepIndex || showSummary}
+					class:pp-dot-active={i === stepIndex}
+					class:pp-dot-done={i < stepIndex}
 					style="--dot-color: {phaseColor[steps[i].phase]};"
 					onclick={() => goToStep(i)}
 					aria-label="Go to step {i + 1}: {steps[i].phase}"
@@ -189,7 +140,7 @@
 			{/each}
 		</div>
 		<span class="pp-cycle-label">
-			{showSummary ? 'Done' : `Cycle ${current.cycle} of 2`}
+			Cycle {current.cycle} of 2
 		</span>
 	</div>
 </div>
@@ -401,46 +352,6 @@
 		}
 	}
 
-	/* ── Summary overlay ────────────────────────────────────── */
-	.pp-overlay {
-		position: absolute;
-		inset: 0;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		background: rgba(9, 9, 11, 0.88);
-		border-radius: 8px;
-		backdrop-filter: blur(4px);
-		animation: pp-overlay-in 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-	}
-
-	.pp-overlay-title {
-		font-size: 1.15rem;
-		font-weight: 700;
-		background: var(--gradient-text);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
-		margin-bottom: 0.3rem;
-	}
-
-	.pp-overlay-text {
-		font-size: 0.85rem;
-		color: var(--text-secondary);
-	}
-
-	@keyframes pp-overlay-in {
-		0% {
-			opacity: 0;
-			backdrop-filter: blur(0);
-		}
-		100% {
-			opacity: 1;
-			backdrop-filter: blur(4px);
-		}
-	}
-
 	/* ── Progress dots ──────────────────────────────────────── */
 	.pp-progress {
 		display: flex;
@@ -584,8 +495,7 @@
 		}
 
 		.pp-badge-content,
-		.pp-role,
-		.pp-overlay {
+		.pp-role {
 			animation: none;
 		}
 	}

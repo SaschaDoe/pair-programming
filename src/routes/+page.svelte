@@ -1199,6 +1199,9 @@
 			<h2>But It's 2026.</h2>
 		</ScrollReveal>
 		<ScrollReveal delay={150}>
+			<img src="/pics/ai review.png" alt="Meme showing three paths: 'Review with AI', 'Review without AI (do it anyway without telling anyone)', and 'Just the AI reviews' — with a cow choosing the middle path" class="section-image" />
+		</ScrollReveal>
+		<ScrollReveal delay={250}>
 			<p class="lead">
 				AI is fast. Work is parallelized. Why would you pair?
 			</p>
@@ -1315,6 +1318,9 @@
 			<h2>Mob Programming</h2>
 		</ScrollReveal>
 		<ScrollReveal delay={150}>
+			<img src="/pics/9399ac86e9427b327882e36d52e1c0de.jpg" alt="Mob programming street edition — one worker digging while many others stand around watching" class="section-image" />
+		</ScrollReveal>
+		<ScrollReveal delay={250}>
 			<p class="lead">
 				Take pair programming further — the whole team works on the same thing, at the same time, on the same computer.
 			</p>
@@ -2442,6 +2448,14 @@
 	}
 
 	/* ── 2026 Question Section ───────────────────────────────── */
+	.section-image {
+		display: block;
+		max-width: 480px;
+		width: 100%;
+		margin: 1.5rem auto 2rem;
+		border-radius: var(--radius);
+	}
+
 	.objections {
 		display: flex;
 		flex-direction: column;
