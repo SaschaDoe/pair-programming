@@ -11,6 +11,333 @@
 		whenColumns, sessionSteps, bestPractices, summaryCards, sources,
 		barriers, aiAnswers, modernObjections
 	} from '$lib/data/presentationContent';
+
+	// ── Interactive Review Formula (from CodeReviewWithAI) ──────
+	let contentSize = $state(25);
+	let timePassed = $state(15);
+	let isDragging = $state(false);
+	let svgElement: SVGSVGElement | null = $state(null);
+
+	const minWidth = 50;
+	const maxWidth = 520;
+	const minHeight = 40;
+	const maxHeight = 260;
+	const originX = 100;
+	const originY = 350;
+
+	let rectWidth = $derived(minWidth + (contentSize / 100) * (maxWidth - minWidth));
+	let rectHeight = $derived(minHeight + (timePassed / 100) * (maxHeight - minHeight));
+	let handleX = $derived(originX + rectWidth);
+	let handleY = $derived(originY - rectHeight);
+	let areaPercent = $derived((rectWidth * rectHeight) / (maxWidth * maxHeight) * 100);
+
+	let rectColor = $derived.by(() => {
+		if (areaPercent < 15) return '#10b981';
+		if (areaPercent < 30) return '#22c55e';
+		if (areaPercent < 45) return '#84cc16';
+		if (areaPercent < 60) return '#eab308';
+		if (areaPercent < 75) return '#f97316';
+		return '#ef4444';
+	});
+
+	let combinedMetric = $derived(contentSize * 0.7 + timePassed * 0.3);
+	let lgtmOpacity = $derived(Math.min(1, Math.max(0, (combinedMetric - 25) / 35)));
+	let meaningfulOpacity = $derived(Math.min(1, Math.max(0, (35 - combinedMetric) / 25)));
+
+	let statusText = $derived.by(() => {
+		if (areaPercent < 15) return 'Excellent: Deep, focused review possible';
+		if (areaPercent < 30) return 'Good: Reviewer can understand the changes';
+		if (areaPercent < 45) return 'Okay: Some details may be missed';
+		if (areaPercent < 60) return 'Warning: Review quality declining';
+		if (areaPercent < 75) return 'Poor: Surface-level review only';
+		return 'Rubber Stamp: "Looks good to me!"';
+	});
+
+	let timeLabel = $derived.by(() => {
+		if (timePassed < 15) return 'Just written';
+		if (timePassed < 35) return 'Same day';
+		if (timePassed < 55) return 'Few days later';
+		if (timePassed < 75) return 'Week later';
+		return 'Weeks/months later';
+	});
+
+	function screenToSvg(clientX: number, clientY: number) {
+		if (!svgElement) return { x: 0, y: 0 };
+		const pt = svgElement.createSVGPoint();
+		pt.x = clientX;
+		pt.y = clientY;
+		const svgP = pt.matrixTransform(svgElement.getScreenCTM()?.inverse());
+		return { x: svgP.x, y: svgP.y };
+	}
+
+	function handleDragStart(e: MouseEvent | TouchEvent) {
+		e.preventDefault();
+		isDragging = true;
+		if (e.type === 'mousedown') {
+			window.addEventListener('mousemove', handleDragMove);
+			window.addEventListener('mouseup', handleDragEnd);
+		} else {
+			window.addEventListener('touchmove', handleDragMove);
+			window.addEventListener('touchend', handleDragEnd);
+		}
+	}
+
+	function handleDragMove(e: MouseEvent | TouchEvent) {
+		if (!isDragging) return;
+		const clientX = e instanceof MouseEvent ? e.clientX : e.touches[0].clientX;
+		const clientY = e instanceof MouseEvent ? e.clientY : e.touches[0].clientY;
+		const svgCoords = screenToSvg(clientX, clientY);
+		const newWidth = Math.max(minWidth, Math.min(maxWidth, svgCoords.x - originX));
+		const newHeight = Math.max(minHeight, Math.min(maxHeight, originY - svgCoords.y));
+		contentSize = Math.max(5, Math.min(100, ((newWidth - minWidth) / (maxWidth - minWidth)) * 100));
+		timePassed = Math.max(5, Math.min(100, ((newHeight - minHeight) / (maxHeight - minHeight)) * 100));
+	}
+
+	function handleDragEnd() {
+		isDragging = false;
+		window.removeEventListener('mousemove', handleDragMove);
+		window.removeEventListener('mouseup', handleDragEnd);
+		window.removeEventListener('touchmove', handleDragMove);
+		window.removeEventListener('touchend', handleDragEnd);
+	}
+
+	// ── Synchronized Loop + Chart Animation ──────────────────
+	const TOTAL_DUR = 24;       // seconds — ends mid-slow-cycle so red chart finishes on a rise
+	const SLOW_CYCLE = 10;      // seconds per slow loop cycle
+	const FAST_CYCLE = 2;       // seconds per fast loop cycle
+	const SUB_LOOP_R = 22;      // sub-loop circle radius
+
+	// Per-event gains (discrete jumps, not continuous)
+	// Slow: 3 sub-loop passes per cycle → +3.33 each, 1 feedback → -6
+	// Net per cycle: +10 - 6 = +4. ~2.86 cycles → final ≈11.4
+	const SLOW_WRITE_GAIN = 10 / 3;
+	const SLOW_FEEDBACK_LOSS = 6;
+	// Fast: 1 write per cycle → +3, 1 feedback → -0.3
+	// Net per cycle: +2.7. ~13.3 cycles → final ≈36
+	const FAST_WRITE_GAIN = 3;
+	const FAST_FEEDBACK_LOSS = 1;
+
+	// Chart mapping
+	const CHART_X_MIN = 40, CHART_X_MAX = 300;
+	const CHART_Y_MIN = 20, CHART_Y_MAX = 130;
+	const PROGRESS_MAX = 40;
+
+	let slowPathEl: SVGPathElement | null = $state(null);
+	let fastPathEl: SVGPathElement | null = $state(null);
+	let loopSectionEl: HTMLElement | null = $state(null);
+
+	let isLoopAnimating = $state(false);
+	let loopAnimDone = $state(false);
+	let animFrameId = 0;
+	let animTime = $state(0);
+
+	let slowDotPos = $state({ x: 200, y: 68 });
+	let fastDotPos = $state({ x: 200, y: 130 });
+
+	let slowChartPts: Array<{ x: number; y: number }> = $state([]);
+	let fastChartPts: Array<{ x: number; y: number }> = $state([]);
+
+	let slowProgress = $state(0);
+	let fastProgress = $state(0);
+
+	// Label highlight flashes (true = currently glowing)
+	let slowWriteHl = $state(false);
+	let slowFeedbackHl = $state(false);
+	let fastWriteHl = $state(false);
+	let fastFeedbackHl = $state(false);
+
+	function progressToY(progress: number): number {
+		const clamped = Math.max(0, Math.min(PROGRESS_MAX, progress));
+		return CHART_Y_MAX - (clamped / PROGRESS_MAX) * (CHART_Y_MAX - CHART_Y_MIN);
+	}
+
+	function timeToX(t: number): number {
+		return CHART_X_MIN + (t / TOTAL_DUR) * (CHART_X_MAX - CHART_X_MIN);
+	}
+
+	// Event thresholds are computed from path geometry at animation start
+	type LoopEvent = { dist: number; type: 'write' | 'feedback' };
+
+	function startLoopAnimation() {
+		if (isLoopAnimating) return;
+		if (!slowPathEl || !fastPathEl) return;
+		isLoopAnimating = true;
+		loopAnimDone = false;
+		slowProgress = 0;
+		fastProgress = 0;
+		animTime = 0;
+		slowChartPts = [{ x: CHART_X_MIN, y: CHART_Y_MAX }];
+		fastChartPts = [{ x: CHART_X_MIN, y: CHART_Y_MAX }];
+
+		// ── Compute event thresholds from path geometry ──
+		const slowTotal = slowPathEl.getTotalLength();
+		const subLoopCirc = 2 * Math.PI * SUB_LOOP_R;  // ≈138
+		const mainLoopLen = slowTotal - 3 * subLoopCirc;
+
+		// Slow events: chart jumps up at start of each sub-loop,
+		// drops at ~80% through the main loop section (Get Feedback position)
+		const slowEvents: LoopEvent[] = [
+			{ dist: 0, type: 'write' },                                          // entering sub-loop 1
+			{ dist: subLoopCirc, type: 'write' },                                // entering sub-loop 2
+			{ dist: 2 * subLoopCirc, type: 'write' },                            // entering sub-loop 3
+			{ dist: 3 * subLoopCirc + 0.78 * mainLoopLen, type: 'feedback' },    // Get Feedback
+		];
+
+		const fastTotal = fastPathEl.getTotalLength();
+		// Fast events: write at start, feedback at ~25% (right side of loop)
+		const fastEvents: LoopEvent[] = [
+			{ dist: 0, type: 'write' },
+			{ dist: 0.25 * fastTotal, type: 'feedback' },
+		];
+
+		let startTime: number | null = null;
+		let slowEventIdx = -1;
+		let fastEventIdx = -1;
+		let prevSlowCycle = -1;
+		let prevFastCycle = -1;
+
+		// Write → diagonal rise (spread over RISE_DX pixels on x-axis)
+		// Feedback → near-vertical drop (spread over DROP_DX pixels)
+		const RISE_DX = 12;
+		const DROP_DX = 2;
+
+		function fireEvent(type: 'write' | 'feedback', loop: 'slow' | 'fast', x: number) {
+			// Flash the corresponding label
+			if (loop === 'slow') {
+				if (type === 'write') { slowWriteHl = true; setTimeout(() => slowWriteHl = false, 350); }
+				else { slowFeedbackHl = true; setTimeout(() => slowFeedbackHl = false, 350); }
+			} else {
+				if (type === 'write') { fastWriteHl = true; setTimeout(() => fastWriteHl = false, 350); }
+				else { fastFeedbackHl = true; setTimeout(() => fastFeedbackHl = false, 350); }
+			}
+
+			if (loop === 'slow') {
+				if (type === 'write') {
+					slowProgress += SLOW_WRITE_GAIN;
+					slowChartPts = [...slowChartPts,
+						{ x: Math.min(x + RISE_DX, CHART_X_MAX), y: progressToY(slowProgress) }
+					];
+				} else {
+					const lastX = slowChartPts.length > 0 ? slowChartPts[slowChartPts.length - 1].x : x;
+					slowProgress = Math.max(0, slowProgress - SLOW_FEEDBACK_LOSS);
+					slowChartPts = [...slowChartPts,
+						{ x: lastX, y: progressToY(slowProgress) }
+					];
+				}
+			} else {
+				if (type === 'write') {
+					fastProgress += FAST_WRITE_GAIN;
+					fastChartPts = [...fastChartPts,
+						{ x: Math.min(x + RISE_DX, CHART_X_MAX), y: progressToY(fastProgress) }
+					];
+				} else {
+					const lastX = fastChartPts.length > 0 ? fastChartPts[fastChartPts.length - 1].x : x;
+					fastProgress = Math.max(0, fastProgress - FAST_FEEDBACK_LOSS);
+					fastChartPts = [...fastChartPts,
+						{ x: lastX, y: progressToY(fastProgress) }
+					];
+				}
+			}
+		}
+
+		function tick(now: number) {
+			if (!startTime) startTime = now;
+			const elapsed = (now - startTime) / 1000;
+
+			if (elapsed >= TOTAL_DUR) {
+				animTime = TOTAL_DUR;
+				isLoopAnimating = false;
+				loopAnimDone = true;
+				return;
+			}
+
+			animTime = elapsed;
+			const x = timeToX(elapsed);
+
+			// ── Slow loop ──
+			const slowCycleNum = Math.floor(elapsed / SLOW_CYCLE);
+			const slowDist = ((elapsed % SLOW_CYCLE) / SLOW_CYCLE) * slowTotal;
+
+			if (slowPathEl) {
+				const pt = slowPathEl.getPointAtLength(slowDist);
+				slowDotPos = { x: pt.x, y: pt.y };
+			}
+
+			// Reset event index on new cycle
+			if (slowCycleNum !== prevSlowCycle) {
+				slowEventIdx = -1;
+				prevSlowCycle = slowCycleNum;
+			}
+			// Check if dot crossed any event thresholds
+			for (let i = slowEventIdx + 1; i < slowEvents.length; i++) {
+				if (slowDist >= slowEvents[i].dist) {
+					fireEvent(slowEvents[i].type, 'slow', x);
+					slowEventIdx = i;
+				}
+			}
+
+			// ── Fast loop ──
+			const fastCycleNum = Math.floor(elapsed / FAST_CYCLE);
+			const fastDist = ((elapsed % FAST_CYCLE) / FAST_CYCLE) * fastTotal;
+
+			if (fastPathEl) {
+				const pt = fastPathEl.getPointAtLength(fastDist);
+				fastDotPos = { x: pt.x, y: pt.y };
+			}
+
+			if (fastCycleNum !== prevFastCycle) {
+				fastEventIdx = -1;
+				prevFastCycle = fastCycleNum;
+			}
+			for (let i = fastEventIdx + 1; i < fastEvents.length; i++) {
+				if (fastDist >= fastEvents[i].dist) {
+					fireEvent(fastEvents[i].type, 'fast', x);
+					fastEventIdx = i;
+				}
+			}
+
+			animFrameId = requestAnimationFrame(tick);
+		}
+
+		animFrameId = requestAnimationFrame(tick);
+	}
+
+	function replayLoopAnimation() {
+		if (animFrameId) cancelAnimationFrame(animFrameId);
+		isLoopAnimating = false;
+		loopAnimDone = false;
+		slowProgress = 0;
+		fastProgress = 0;
+		animTime = 0;
+		slowChartPts = [];
+		fastChartPts = [];
+		slowDotPos = { x: 200, y: 68 };
+		fastDotPos = { x: 200, y: 130 };
+		setTimeout(() => startLoopAnimation(), 50);
+	}
+
+	// Chart polyline strings: only event points, no trailing cursor
+	let slowChartPointsStr = $derived(slowChartPts.map(p => `${p.x},${p.y}`).join(' '));
+	let fastChartPointsStr = $derived(fastChartPts.map(p => `${p.x},${p.y}`).join(' '));
+
+	// Final values for gap indicator
+	let slowFinalY = $derived(progressToY(slowProgress));
+	let fastFinalY = $derived(progressToY(fastProgress));
+
+	// Auto-start on scroll into view
+	$effect(() => {
+		if (!loopSectionEl) return;
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0].isIntersecting && !isLoopAnimating && !loopAnimDone) {
+					startLoopAnimation();
+				}
+			},
+			{ threshold: 0.4 }
+		);
+		observer.observe(loopSectionEl);
+		return () => observer.disconnect();
+	});
 </script>
 
 <!-- ============================================================ -->
@@ -134,9 +461,420 @@
 </section>
 
 <!-- ============================================================ -->
-<!-- BENEFITS                                                     -->
+<!-- SECTION 1: SMALL FEEDBACK LOOPS                              -->
 <!-- ============================================================ -->
 <section class="section section-alt">
+	<div class="container" bind:this={loopSectionEl}>
+		<ScrollReveal>
+			<p class="label">The Foundation</p>
+			<h2>Small Loops Win</h2>
+		</ScrollReveal>
+		<ScrollReveal delay={150}>
+			<p class="lead">
+				The tighter your feedback loop, the cheaper every fix becomes. Compare these two systems:
+			</p>
+		</ScrollReveal>
+
+		<ScrollReveal delay={250}>
+			<div class="loops-comparison">
+				<!-- Slow Loop -->
+				<div class="loop-column">
+					<h3 class="loop-title loop-title-slow">Slow Feedback</h3>
+					<div class="loop-track loop-track-slow">
+						<svg viewBox="-50 0 500 380" class="loop-svg">
+							<!-- Main loop track -->
+							<path
+								d="M 200 90 C 310 70, 340 130, 340 190 C 340 250, 310 300, 270 315 C 230 330, 170 330, 130 315 C 90 300, 60 250, 60 190 C 60 130, 90 70, 200 90"
+								fill="none" stroke="rgba(239,68,68,0.12)" stroke-width="22" stroke-linecap="round"
+							/>
+							<!-- Sub-loop track at Write Code -->
+							<circle cx="200" cy="90" r="22" fill="none" stroke="rgba(239,68,68,0.12)" stroke-width="22"/>
+
+							<!-- Hidden motion path: 3 sub-loops at Write Code + main loop -->
+							<path
+								bind:this={slowPathEl}
+								d="M 200 68 A 22 22 0 1 1 200 112 A 22 22 0 1 1 200 68 A 22 22 0 1 1 200 112 A 22 22 0 1 1 200 68 A 22 22 0 1 1 200 112 A 22 22 0 1 1 200 68 C 290 50, 340 120, 340 190 C 340 255, 310 300, 270 315 C 230 330, 170 330, 130 315 C 90 300, 60 250, 60 190 C 60 120, 100 55, 200 68"
+								fill="none" stroke="none"
+							/>
+
+							<!-- Stage labels (highlight on event) -->
+							<text x="200" y="42" class="loop-label" fill={slowWriteHl ? '#ef4444' : '#a1a1aa'} font-size={slowWriteHl ? '15' : '13'} text-anchor="middle" font-weight="700">Write Code</text>
+							<text x="358" y="195" fill="#a1a1aa" font-size="13" text-anchor="start" font-weight="600">Commit</text>
+							<text x="285" y="340" fill="#a1a1aa" font-size="13" text-anchor="start" font-weight="600">Open PR</text>
+							<text x="115" y="340" fill="#a1a1aa" font-size="13" text-anchor="end" font-weight="600">Wait for Review</text>
+							<text x="42" y="195" class="loop-label" fill={slowFeedbackHl ? '#ef4444' : '#a1a1aa'} font-size={slowFeedbackHl ? '15' : '13'} text-anchor="end" font-weight="600">Get Feedback</text>
+
+							<!-- JS-driven dot -->
+							<circle cx={slowDotPos.x} cy={slowDotPos.y} r="7" fill="#ef4444" filter="drop-shadow(0 0 6px rgba(239,68,68,0.6))"/>
+						</svg>
+					</div>
+					<!-- Sawtooth progress chart: big drops (reactive) -->
+					<div class="loop-chart">
+						<svg viewBox="0 0 320 160" class="loop-progress-svg">
+							<rect x="0" y="0" width="320" height="160" fill="#111113" rx="8"/>
+							<!-- Grid -->
+							<line x1="40" y1="30" x2="300" y2="30" stroke="#1e1e22" stroke-width="1" stroke-dasharray="3,3"/>
+							<line x1="40" y1="65" x2="300" y2="65" stroke="#1e1e22" stroke-width="1" stroke-dasharray="3,3"/>
+							<line x1="40" y1="100" x2="300" y2="100" stroke="#1e1e22" stroke-width="1" stroke-dasharray="3,3"/>
+							<!-- Axes -->
+							<line x1="40" y1="130" x2="300" y2="130" stroke="#52525b" stroke-width="1"/>
+							<line x1="40" y1="130" x2="40" y2="20" stroke="#52525b" stroke-width="1"/>
+							<!-- Axis labels -->
+							<text x="170" y="152" fill="#52525b" font-size="9" text-anchor="middle">Time</text>
+							<text x="12" y="75" fill="#52525b" font-size="9" text-anchor="middle" transform="rotate(-90, 12, 75)">Features</text>
+							<!-- Reactive sawtooth line -->
+							{#if slowChartPts.length > 1}
+								<polyline
+									points={slowChartPointsStr}
+									fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+								/>
+							{/if}
+						</svg>
+					</div>
+				</div>
+
+				<!-- Fast Loop -->
+				<div class="loop-column">
+					<h3 class="loop-title loop-title-fast">Fast Feedback</h3>
+					<div class="loop-track loop-track-fast">
+						<svg viewBox="-50 0 500 380" class="loop-svg">
+							<!-- Fast loop path: small tight circle -->
+							<path
+								d="M 200 130 C 270 130, 290 170, 290 200 C 290 230, 270 270, 200 270 C 130 270, 110 230, 110 200 C 110 170, 130 130, 200 130"
+								fill="none" stroke="rgba(16,185,129,0.12)" stroke-width="22" stroke-linecap="round"
+							/>
+
+							<!-- Hidden motion path for JS sampling -->
+							<path
+								bind:this={fastPathEl}
+								d="M 200 130 C 270 130, 290 170, 290 200 C 290 230, 270 270, 200 270 C 130 270, 110 230, 110 200 C 110 170, 130 130, 200 130"
+								fill="none" stroke="none"
+							/>
+
+							<!-- Stage labels (highlight on event) -->
+							<text x="200" y="112" class="loop-label" fill={fastWriteHl ? '#10b981' : '#a1a1aa'} font-size={fastWriteHl ? '15' : '13'} text-anchor="middle" font-weight="700">Write Code</text>
+							<text x="308" y="205" class="loop-label" fill={fastFeedbackHl ? '#10b981' : '#a1a1aa'} font-size={fastFeedbackHl ? '15' : '13'} text-anchor="start" font-weight="600">Get Feedback</text>
+							<text x="200" y="298" fill="#a1a1aa" font-size="13" text-anchor="middle" font-weight="600">Fix</text>
+
+							<!-- JS-driven dot -->
+							<circle cx={fastDotPos.x} cy={fastDotPos.y} r="7" fill="#10b981" filter="drop-shadow(0 0 6px rgba(16,185,129,0.6))"/>
+						</svg>
+					</div>
+					<!-- Sawtooth progress chart: tiny drops (reactive) -->
+					<div class="loop-chart">
+						<svg viewBox="0 0 320 160" class="loop-progress-svg">
+							<rect x="0" y="0" width="320" height="160" fill="#111113" rx="8"/>
+							<!-- Grid -->
+							<line x1="40" y1="30" x2="300" y2="30" stroke="#1e1e22" stroke-width="1" stroke-dasharray="3,3"/>
+							<line x1="40" y1="65" x2="300" y2="65" stroke="#1e1e22" stroke-width="1" stroke-dasharray="3,3"/>
+							<line x1="40" y1="100" x2="300" y2="100" stroke="#1e1e22" stroke-width="1" stroke-dasharray="3,3"/>
+							<!-- Axes -->
+							<line x1="40" y1="130" x2="300" y2="130" stroke="#52525b" stroke-width="1"/>
+							<line x1="40" y1="130" x2="40" y2="20" stroke="#52525b" stroke-width="1"/>
+							<!-- Axis labels -->
+							<text x="170" y="152" fill="#52525b" font-size="9" text-anchor="middle">Time</text>
+							<text x="12" y="75" fill="#52525b" font-size="9" text-anchor="middle" transform="rotate(-90, 12, 75)">Features</text>
+							<!-- Reactive sawtooth line -->
+							{#if fastChartPts.length > 1}
+								<polyline
+									points={fastChartPointsStr}
+									fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+								/>
+							{/if}
+						</svg>
+					</div>
+				</div>
+			</div>
+		</ScrollReveal>
+
+		{#if loopAnimDone}
+			<div class="replay-wrap">
+				<button class="replay-btn" onclick={replayLoopAnimation}>
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+					</svg>
+					Replay
+				</button>
+			</div>
+		{/if}
+
+		<ScrollReveal delay={400}>
+			<div class="callout">
+				<span class="callout-icon">&rarr;</span>
+				<p>Catching a bug in the moment costs minutes. Finding it in a PR review costs hours. Discovering it in production costs days. <strong>The tighter the loop, the cheaper the fix.</strong></p>
+			</div>
+		</ScrollReveal>
+	</div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 2: MENTORING COMPOUNDS                               -->
+<!-- ============================================================ -->
+<section class="section">
+	<div class="container">
+		<ScrollReveal>
+			<p class="label">The Investment</p>
+			<h2>Mentoring Compounds Fast</h2>
+		</ScrollReveal>
+		<ScrollReveal delay={150}>
+			<p class="lead">
+				Even on a three-month project, pairing a junior with a senior pays off. The initial slowdown is an investment — not a cost.
+			</p>
+		</ScrollReveal>
+
+		<ScrollReveal delay={250}>
+			<div class="mentoring-chart-wrap">
+				<svg viewBox="0 0 780 400" class="mentoring-svg">
+					<rect x="0" y="0" width="780" height="400" fill="#111113" rx="12"/>
+
+					<!-- Grid -->
+					<g stroke="#1e1e22" stroke-width="1">
+						<line x1="80" y1="70" x2="620" y2="70" stroke-dasharray="4,4"/>
+						<line x1="80" y1="130" x2="620" y2="130" stroke-dasharray="4,4"/>
+						<line x1="80" y1="190" x2="620" y2="190" stroke-dasharray="4,4"/>
+						<line x1="80" y1="250" x2="620" y2="250" stroke-dasharray="4,4"/>
+					</g>
+
+					<!-- Axes -->
+					<line x1="80" y1="310" x2="620" y2="310" stroke="#52525b" stroke-width="1.5"/>
+					<line x1="80" y1="310" x2="80" y2="50" stroke="#52525b" stroke-width="1.5"/>
+
+					<!-- Axis labels -->
+					<text x="350" y="365" fill="#a1a1aa" font-size="13" text-anchor="middle" font-weight="600">Time</text>
+					<text x="32" y="180" fill="#a1a1aa" font-size="13" text-anchor="middle" font-weight="600" transform="rotate(-90, 32, 180)">Productivity</text>
+
+					<!-- Time markers -->
+					<text x="175" y="335" fill="#a1a1aa" font-size="11" text-anchor="middle">Week 2</text>
+					<text x="350" y="335" fill="#a1a1aa" font-size="11" text-anchor="middle">Month 1</text>
+					<text x="530" y="335" fill="#a1a1aa" font-size="11" text-anchor="middle">Month 3</text>
+
+					<!-- Solo line: starts ok, grows slowly, plateaus -->
+					<path
+						d="M 80 250 C 150 245, 250 232, 350 222 C 450 212, 550 207, 620 200"
+						fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"
+						stroke-dasharray="1200" stroke-dashoffset="1200"
+					>
+						<animate attributeName="stroke-dashoffset" from="1200" to="0" dur="2.5s" begin="0.5s" fill="freeze"/>
+					</path>
+					<!-- Solo label: positioned inside chart area, end-anchored -->
+					<text x="620" y="195" fill="#ef4444" font-size="13" font-weight="700" text-anchor="end" opacity="0">
+						Solo
+						<animate attributeName="opacity" from="0" to="1" dur="0.4s" begin="2.8s" fill="freeze"/>
+					</text>
+
+					<!-- With mentoring line: dips initially, then rises steeply, crosses over -->
+					<path
+						d="M 80 250 C 120 265, 160 270, 200 260 C 280 235, 340 190, 400 150 C 460 115, 530 90, 620 75"
+						fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"
+						stroke-dasharray="1200" stroke-dashoffset="1200"
+					>
+						<animate attributeName="stroke-dashoffset" from="1200" to="0" dur="2.5s" begin="0.5s" fill="freeze"/>
+					</path>
+					<!-- With Mentoring label: positioned inside chart area, end-anchored -->
+					<text x="620" y="70" fill="#10b981" font-size="13" font-weight="700" text-anchor="end" opacity="0">
+						With Mentoring
+						<animate attributeName="opacity" from="0" to="1" dur="0.4s" begin="2.8s" fill="freeze"/>
+					</text>
+
+					<!-- Legend (top-right, always visible) -->
+					<g transform="translate(630, 70)" opacity="0">
+						<animate attributeName="opacity" from="0" to="1" dur="0.4s" begin="2.8s" fill="freeze"/>
+						<rect x="0" y="0" width="135" height="70" fill="#111113" fill-opacity="0.9" stroke="#1e1e22" stroke-width="1" rx="6"/>
+						<line x1="12" y1="22" x2="36" y2="22" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"/>
+						<text x="44" y="26" fill="#10b981" font-size="11" font-weight="600">With Mentoring</text>
+						<line x1="12" y1="48" x2="36" y2="48" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"/>
+						<text x="44" y="52" fill="#ef4444" font-size="11" font-weight="600">Solo</text>
+					</g>
+
+					<!-- Crossover highlight -->
+					<g opacity="0">
+						<animate attributeName="opacity" from="0" to="1" dur="0.6s" begin="3.2s" fill="freeze"/>
+						<line x1="260" y1="242" x2="260" y2="310" stroke="#818cf8" stroke-width="1" stroke-dasharray="4,3"/>
+						<circle cx="260" cy="242" r="5" fill="#818cf8" opacity="0.8"/>
+						<text x="272" y="239" fill="#818cf8" font-size="11" font-weight="600" text-anchor="start">Crossover</text>
+					</g>
+
+					<!-- Investment zone shade -->
+					<rect x="80" y="250" width="180" height="28" fill="#10b981" fill-opacity="0.06" rx="4" opacity="0">
+						<animate attributeName="opacity" from="0" to="1" dur="0.4s" begin="3.5s" fill="freeze"/>
+					</rect>
+					<text x="170" y="292" fill="#52525b" font-size="10" text-anchor="middle" opacity="0">
+						Investment phase
+						<animate attributeName="opacity" from="0" to="1" dur="0.4s" begin="3.5s" fill="freeze"/>
+					</text>
+				</svg>
+			</div>
+		</ScrollReveal>
+
+		<ScrollReveal delay={400}>
+			<div class="callout">
+				<span class="callout-icon">&rarr;</span>
+				<p>Knowledge silos kill velocity. A junior who pairs with a senior learns more in weeks than one who reads documentation for months. <strong>Mentoring isn't optional — it's an investment that pays off fast.</strong></p>
+			</div>
+		</ScrollReveal>
+	</div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 3: REVIEWS NEED INSIGHT (Interactive Formula)        -->
+<!-- ============================================================ -->
+<section class="section section-alt">
+	<div class="container">
+		<ScrollReveal>
+			<p class="label">The Formula</p>
+			<h2>Reviews Need Codebase Knowledge</h2>
+		</ScrollReveal>
+		<ScrollReveal delay={150}>
+			<p class="lead">
+				Remember this? A reviewer who doesn't know the codebase is just scanning syntax. <strong>Drag the handle</strong> to see when meaningful review becomes impossible:
+			</p>
+		</ScrollReveal>
+
+		<!-- Interactive SVG Diagram (from CodeReviewWithAI) -->
+		<ScrollReveal delay={250}>
+			<div class="formula-diagram-wrap">
+				<svg
+					bind:this={svgElement}
+					viewBox="0 0 700 420"
+					class="formula-interactive-svg"
+				>
+					<rect x="0" y="0" width="700" height="420" fill="#111113" rx="12"/>
+
+					<!-- Grid lines -->
+					<g stroke="#1e1e22" stroke-width="1">
+						<line x1="100" y1="350" x2="650" y2="350"/>
+						<line x1="100" y1="280" x2="650" y2="280" stroke-dasharray="5,5"/>
+						<line x1="100" y1="210" x2="650" y2="210" stroke-dasharray="5,5"/>
+						<line x1="100" y1="140" x2="650" y2="140" stroke-dasharray="5,5"/>
+						<line x1="100" y1="70" x2="650" y2="70"/>
+						<line x1="100" y1="70" x2="100" y2="350"/>
+						<line x1="237" y1="70" x2="237" y2="350" stroke-dasharray="5,5"/>
+						<line x1="375" y1="70" x2="375" y2="350" stroke-dasharray="5,5"/>
+						<line x1="512" y1="70" x2="512" y2="350" stroke-dasharray="5,5"/>
+						<line x1="650" y1="70" x2="650" y2="350"/>
+					</g>
+
+					<!-- Axes -->
+					<g stroke="#fafafa" stroke-width="2">
+						<line x1="100" y1="350" x2="650" y2="350"/>
+						<line x1="100" y1="350" x2="100" y2="70"/>
+						<polygon points="650,350 640,345 640,355" fill="#fafafa"/>
+						<polygon points="100,70 95,80 105,80" fill="#fafafa"/>
+					</g>
+
+					<!-- Axis labels -->
+					<text x="375" y="395" fill="#fafafa" font-size="14" font-weight="600" text-anchor="middle">Content (Amount of Code to Review)</text>
+					<text x="40" y="210" fill="#818cf8" font-size="14" font-weight="600" text-anchor="middle" transform="rotate(-90, 40, 210)">Insight (Understanding)</text>
+
+					<!-- Scale labels X -->
+					<text x="100" y="370" fill="#52525b" font-size="11" text-anchor="middle">0</text>
+					<text x="237" y="370" fill="#52525b" font-size="11" text-anchor="middle">Small</text>
+					<text x="375" y="370" fill="#52525b" font-size="11" text-anchor="middle">Medium</text>
+					<text x="512" y="370" fill="#52525b" font-size="11" text-anchor="middle">Large</text>
+					<text x="650" y="370" fill="#52525b" font-size="11" text-anchor="middle">Huge</text>
+
+					<!-- Scale labels Y -->
+					<text x="90" y="354" fill="#52525b" font-size="11" text-anchor="end">High</text>
+					<text x="90" y="214" fill="#52525b" font-size="11" text-anchor="end">Medium</text>
+					<text x="90" y="74" fill="#52525b" font-size="11" text-anchor="end">Low</text>
+
+					<!-- Interactive rectangle -->
+					<rect
+						x="100"
+						y={350 - rectHeight}
+						width={rectWidth}
+						height={rectHeight}
+						fill={rectColor}
+						fill-opacity="0.35"
+						stroke={rectColor}
+						stroke-width="3"
+						style="transition: all 0.15s ease-out;"
+					/>
+
+					<!-- "Meaningful Review" text -->
+					{#if meaningfulOpacity > 0.1}
+						<g opacity={meaningfulOpacity} style="transition: opacity 0.2s;">
+							<text x={100 + rectWidth / 2} y={350 - rectHeight / 2 - 10} fill="#10b981" font-size="16" font-weight="700" text-anchor="middle">Meaningful</text>
+							<text x={100 + rectWidth / 2} y={350 - rectHeight / 2 + 12} fill="#10b981" font-size="16" font-weight="700" text-anchor="middle">Review</text>
+						</g>
+					{/if}
+
+					<!-- "LGTM" text -->
+					{#if lgtmOpacity > 0.1}
+						<g opacity={lgtmOpacity} style="transition: opacity 0.2s;">
+							<text x={100 + rectWidth / 2} y={350 - rectHeight / 2 - 8} fill="#ef4444" font-size="22" font-weight="800" text-anchor="middle">"Looks Good</text>
+							<text x={100 + rectWidth / 2} y={350 - rectHeight / 2 + 18} fill="#ef4444" font-size="22" font-weight="800" text-anchor="middle">To Me!"</text>
+						</g>
+					{/if}
+
+					<!-- Draggable handle -->
+					<g
+						class="drag-handle"
+						role="slider"
+						aria-label="Drag to resize review area"
+						aria-valuemin="0"
+						aria-valuemax="100"
+						aria-valuenow={Math.round(areaPercent)}
+						tabindex="0"
+						onmousedown={handleDragStart}
+						ontouchstart={handleDragStart}
+						style="cursor: nwse-resize;"
+					>
+						<circle cx={handleX} cy={handleY} r="18" fill="transparent"/>
+						<circle cx={handleX} cy={handleY} r="10" fill={isDragging ? '#ffffff' : rectColor} stroke="#ffffff" stroke-width="2" style="transition: fill 0.1s;" class:dragging={isDragging}/>
+						<circle cx={handleX} cy={handleY} r="3" fill={isDragging ? rectColor : '#ffffff'} style="transition: fill 0.1s;"/>
+					</g>
+				</svg>
+
+				<!-- Status -->
+				<div class="formula-status" style="border-color: {rectColor};">
+					<span class="formula-status-dot" style="background: {rectColor};"></span>
+					<span>{statusText}</span>
+				</div>
+			</div>
+
+			<!-- Sliders -->
+			<div class="formula-sliders">
+				<div class="formula-slider-group">
+					<label for="content-slider">
+						<span><strong>Content</strong> (lines of code)</span>
+						<span class="formula-slider-value">{contentSize < 30 ? 'Small' : contentSize < 60 ? 'Medium' : contentSize < 85 ? 'Large' : 'Huge'}</span>
+					</label>
+					<input id="content-slider" type="range" min="5" max="100" bind:value={contentSize} class="formula-range"/>
+					<div class="formula-slider-labels"><span>10 lines</span><span>1000+ lines</span></div>
+				</div>
+				<div class="formula-slider-group">
+					<label for="time-slider">
+						<span><strong>Time Passed</strong></span>
+						<span class="formula-slider-value">{timeLabel}</span>
+					</label>
+					<input id="time-slider" type="range" min="5" max="100" bind:value={timePassed} class="formula-range"/>
+					<div class="formula-slider-labels"><span>Just written</span><span>Weeks/months later</span></div>
+				</div>
+			</div>
+
+			<!-- Scenario buttons -->
+			<div class="formula-scenarios">
+				<button class="scenario-btn" onclick={() => { contentSize = 15; timePassed = 10; }}>Pair Programming</button>
+				<button class="scenario-btn" onclick={() => { contentSize = 35; timePassed = 30; }}>Same Day PR</button>
+				<button class="scenario-btn" onclick={() => { contentSize = 55; timePassed = 60; }}>Week Later</button>
+				<button class="scenario-btn" onclick={() => { contentSize = 85; timePassed = 90; }}>Month Later</button>
+			</div>
+		</ScrollReveal>
+
+		<ScrollReveal delay={400}>
+			<div class="callout">
+				<span class="callout-icon">&rarr;</span>
+				<p>Pair programming maximizes both variables: <strong>tiny content</strong> (one line at a time) and <strong>maximum insight</strong> (you just discussed it). That's why it's the tightest possible review.</p>
+			</div>
+		</ScrollReveal>
+	</div>
+</section>
+
+<!-- ============================================================ -->
+<!-- BENEFITS                                                     -->
+<!-- ============================================================ -->
+<section class="section">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Good</p>
@@ -163,7 +901,7 @@
 <!-- ============================================================ -->
 <!-- WHY IT HASN'T CAUGHT ON                                      -->
 <!-- ============================================================ -->
-<section class="section">
+<section class="section section-alt">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Human Problem</p>
@@ -196,7 +934,7 @@
 <!-- ============================================================ -->
 <!-- TEAM QUIZ RESULTS                                            -->
 <!-- ============================================================ -->
-<section class="section section-alt" id="team-results">
+<section class="section" id="team-results">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">Check In</p>
@@ -216,7 +954,7 @@
 <!-- ============================================================ -->
 <!-- WHAT WE CAN DO                                               -->
 <!-- ============================================================ -->
-<section class="section">
+<section class="section section-alt">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">Building Safety</p>
@@ -256,7 +994,7 @@
 <!-- ============================================================ -->
 <!-- CLASSIC OBJECTIONS                                           -->
 <!-- ============================================================ -->
-<section class="section section-alt">
+<section class="section">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Timeless Pushback</p>
@@ -282,7 +1020,7 @@
 <!-- ============================================================ -->
 <!-- PITFALLS                                                     -->
 <!-- ============================================================ -->
-<section class="section">
+<section class="section section-alt">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Challenges</p>
@@ -315,7 +1053,7 @@
 <!-- ============================================================ -->
 <!-- PAIRING STYLES                                               -->
 <!-- ============================================================ -->
-<section class="section section-alt">
+<section class="section">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Methods</p>
@@ -339,7 +1077,7 @@
 <!-- ============================================================ -->
 <!-- WHEN TO PAIR                                                 -->
 <!-- ============================================================ -->
-<section class="section">
+<section class="section section-alt">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Decision</p>
@@ -365,7 +1103,7 @@
 <!-- ============================================================ -->
 <!-- SESSION STRUCTURE                                            -->
 <!-- ============================================================ -->
-<section class="section section-alt">
+<section class="section">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Rhythm</p>
@@ -395,7 +1133,7 @@
 <!-- ============================================================ -->
 <!-- TDD PING-PONG VISUALIZATION                                  -->
 <!-- ============================================================ -->
-<section class="section">
+<section class="section section-alt">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">TDD In Action</p>
@@ -419,7 +1157,7 @@
 <!-- ============================================================ -->
 <!-- THE 2026 QUESTION                                            -->
 <!-- ============================================================ -->
-<section class="section section-alt">
+<section class="section">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Elephant in the Room</p>
@@ -477,7 +1215,7 @@
 <!-- ============================================================ -->
 <!-- AI WORKFLOWS                                                 -->
 <!-- ============================================================ -->
-<section class="section">
+<section class="section section-alt">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">Human + Machine</p>
@@ -535,7 +1273,7 @@
 <!-- ============================================================ -->
 <!-- MOB PROGRAMMING                                              -->
 <!-- ============================================================ -->
-<section class="section section-alt">
+<section class="section">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">Beyond Pairing</p>
@@ -623,7 +1361,7 @@
 <!-- ============================================================ -->
 <!-- REMOTE PAIRING                                               -->
 <!-- ============================================================ -->
-<section class="section">
+<section class="section section-alt">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">Distributed Teams</p>
@@ -668,7 +1406,7 @@
 <!-- ============================================================ -->
 <!-- BEST PRACTICES                                               -->
 <!-- ============================================================ -->
-<section class="section section-alt">
+<section class="section">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Playbook</p>
@@ -693,7 +1431,7 @@
 <!-- ============================================================ -->
 <!-- SUMMARY                                                      -->
 <!-- ============================================================ -->
-<section class="section">
+<section class="section section-alt">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">At a Glance</p>
@@ -722,7 +1460,7 @@
 <!-- ============================================================ -->
 <!-- SOURCES                                                      -->
 <!-- ============================================================ -->
-<section class="section section-alt section-sources">
+<section class="section section-sources">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">References</p>
@@ -747,7 +1485,7 @@
 <!-- ============================================================ -->
 <!-- FEEDBACK                                                     -->
 <!-- ============================================================ -->
-<section class="section">
+<section class="section section-alt">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">Feedback</p>
@@ -987,6 +1725,251 @@
 	.navigator-badge {
 		background: linear-gradient(135deg, #a855f7, #c084fc);
 		color: white;
+	}
+
+	/* ── Section 1: Feedback Loops ──────────────────────────── */
+	.loops-comparison {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 2rem;
+		margin: 1.5rem 0 2rem;
+	}
+
+	@media (max-width: 640px) {
+		.loops-comparison {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	.loop-column {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
+
+	.loop-title {
+		font-size: 1.1rem;
+		font-weight: 700;
+		margin-bottom: 0.75rem;
+		text-align: center;
+	}
+
+	.loop-title-slow { color: #ef4444; }
+	.loop-title-fast { color: #10b981; }
+
+	.loop-track {
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		padding: 1rem;
+		width: 100%;
+		display: flex;
+		justify-content: center;
+	}
+
+	.loop-track-slow { border-color: rgba(239, 68, 68, 0.15); }
+	.loop-track-fast { border-color: rgba(16, 185, 129, 0.15); }
+
+	.loop-svg {
+		width: 100%;
+		max-width: 280px;
+		display: block;
+	}
+
+	.loop-chart {
+		width: 100%;
+		margin-top: 1rem;
+	}
+
+	.loop-progress-svg {
+		width: 100%;
+		display: block;
+		border-radius: 8px;
+	}
+
+	.loop-label {
+		transition: fill 0.15s ease, font-size 0.15s ease;
+	}
+
+	.replay-wrap {
+		display: flex;
+		justify-content: center;
+		margin: 1rem 0 0.5rem;
+	}
+
+	.replay-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.4rem 1rem;
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: #a1a1aa;
+		background: rgba(255, 255, 255, 0.04);
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		border-radius: 6px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.replay-btn:hover {
+		color: #e4e4e7;
+		background: rgba(255, 255, 255, 0.08);
+		border-color: rgba(255, 255, 255, 0.15);
+	}
+
+	/* ── Section 2: Mentoring Graph ────────────────────────── */
+	.mentoring-chart-wrap {
+		margin: 1.5rem 0 2rem;
+	}
+
+	.mentoring-svg {
+		width: 100%;
+		max-width: 700px;
+		display: block;
+		border-radius: 12px;
+	}
+
+	/* ── Section 3: Interactive Formula ────────────────────── */
+	.formula-diagram-wrap {
+		margin: 1.5rem 0 1rem;
+	}
+
+	.formula-interactive-svg {
+		width: 100%;
+		max-width: 700px;
+		display: block;
+		border-radius: 12px;
+		user-select: none;
+	}
+
+	.formula-status {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.75rem 1rem;
+		margin-top: 1rem;
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-left-width: 3px;
+		border-radius: var(--radius-sm);
+		font-size: 0.95rem;
+		font-weight: 500;
+		color: var(--text-secondary);
+		transition: border-color 0.3s;
+	}
+
+	.formula-status-dot {
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		flex-shrink: 0;
+		transition: background 0.3s;
+	}
+
+	.formula-sliders {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 2rem;
+		max-width: 700px;
+		margin: 1.5rem 0;
+	}
+
+	@media (max-width: 540px) {
+		.formula-sliders {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	.formula-slider-group label {
+		display: flex;
+		justify-content: space-between;
+		margin-bottom: 0.5rem;
+		font-size: 0.9rem;
+	}
+
+	.formula-slider-value {
+		color: var(--text-muted);
+	}
+
+	.formula-range {
+		-webkit-appearance: none;
+		appearance: none;
+		width: 100%;
+		height: 8px;
+		background: var(--bg-card);
+		border-radius: 4px;
+		outline: none;
+		cursor: pointer;
+	}
+
+	.formula-range::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		appearance: none;
+		width: 20px;
+		height: 20px;
+		background: var(--accent);
+		border-radius: 50%;
+		cursor: pointer;
+		transition: background 0.2s, transform 0.1s;
+	}
+
+	.formula-range::-webkit-slider-thumb:hover {
+		background: var(--accent-bright);
+		transform: scale(1.1);
+	}
+
+	.formula-range::-moz-range-thumb {
+		width: 20px;
+		height: 20px;
+		background: var(--accent);
+		border-radius: 50%;
+		cursor: pointer;
+		border: none;
+	}
+
+	.formula-slider-labels {
+		display: flex;
+		justify-content: space-between;
+		font-size: 0.75rem;
+		color: var(--text-muted);
+		margin-top: 0.25rem;
+	}
+
+	.formula-scenarios {
+		display: flex;
+		gap: 0.75rem;
+		flex-wrap: wrap;
+		max-width: 700px;
+		margin-bottom: 2rem;
+	}
+
+	.scenario-btn {
+		padding: 0.5rem 1rem;
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: 6px;
+		color: var(--text-primary);
+		font-size: 0.875rem;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.scenario-btn:hover {
+		background: var(--accent);
+		border-color: var(--accent);
+	}
+
+	.drag-handle {
+		cursor: nwse-resize;
+	}
+
+	.drag-handle:hover circle:nth-child(2) {
+		filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
+	}
+
+	.drag-handle circle.dragging {
+		filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.7));
 	}
 
 	/* ── Benefits Grid ───────────────────────────────────────── */

@@ -77,10 +77,10 @@ export interface XpBullet {
 
 // ── Data ───────────────────────────────────────────────────
 export const benefits: Benefit[] = [
-	{ stat: '15%', title: 'Fewer Defects', description: 'Significantly fewer bugs than solo code.' },
+	{ stat: '&darr;', title: 'Fewer Defects', description: 'Significantly fewer bugs than solo code.' },
 	{ stat: '&uarr;', title: 'Knowledge Transfer', description: 'Juniors learn faster. Seniors teach to solidify.' },
 	{ stat: '&lt;/&gt;', title: 'Better Design', description: 'Two perspectives, cleaner architecture.' },
-	{ stat: '&frac12;', title: 'Faster Debugging', description: 'Two brains find solutions faster.' },
+	{ stat: '&raquo;', title: 'Faster Debugging', description: 'Two brains find solutions faster.' },
 	{ stat: '=', title: 'Shared Ownership', description: 'No single point of failure.' },
 	{ stat: '&check;', title: 'Real-time Review', description: 'Bugs caught now, not days later in PR.' },
 ];
