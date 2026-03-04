@@ -7,8 +7,8 @@ export const quizQuestions: QuizQuestion[] = [
 		section: 'general',
 		options: [
 			{ key: 'a', text: "I ask them immediately — that's what teammates are for." },
-			{ key: 'b', text: 'I quietly google for another 30 minutes, hoping to solve it before they notice.' },
-			{ key: 'c', text: 'I pretend to work on something else until I figure it out alone.' },
+			{ key: 'b', text: "I try on my own for a few more minutes, then ask — but I phrase it to show I already tried." },
+			{ key: 'c', text: 'I quietly google for another 30 minutes, hoping to solve it before they notice.' },
 			{ key: 'd', text: 'I feel a knot in my stomach. Asking would mean admitting I don\'t know something I "should" know.' }
 		]
 	},
@@ -51,8 +51,8 @@ export const quizQuestions: QuizQuestion[] = [
 		section: 'general',
 		options: [
 			{ key: 'a', text: "I raise my hand and ask them to explain. If I don't get it, others probably don't either." },
-			{ key: 'b', text: 'I stay quiet and google it afterwards.' },
-			{ key: 'c', text: "I nod along. I'll figure it out later. Asking would slow everyone down." },
+			{ key: 'b', text: "I might ask someone one-on-one afterwards — but not in front of the whole room." },
+			{ key: 'c', text: "I nod along and stay quiet. I'll figure it out on my own later." },
 			{ key: 'd', text: "I feel a wave of shame. I wonder if I'm the only one who doesn't belong here." }
 		]
 	},
@@ -84,8 +84,8 @@ export const quizQuestions: QuizQuestion[] = [
 		section: 'general',
 		options: [
 			{ key: 'a', text: 'Comfortable — silence means focus.' },
-			{ key: 'b', text: 'Slightly awkward — I feel like I should be communicating or producing something.' },
-			{ key: 'c', text: 'Anxious — are they silently judging what I\'m doing?' },
+			{ key: 'b', text: "Slightly awkward — I feel the urge to fill the silence with something, but I can sit with it." },
+			{ key: 'c', text: "Uneasy — I start wondering if they're silently judging what I'm doing." },
 			{ key: 'd', text: 'I avoid shared working situations partly because of this.' }
 		]
 	},
@@ -124,13 +124,13 @@ export const quizQuestions: QuizQuestion[] = [
 	},
 	{
 		id: 12,
-		text: 'Why? What is it about that person that makes you feel that way? (Pick the one closest to your truth.)',
+		text: "Imagine pairing with someone whose working style clashes with yours. How would you handle it?",
 		section: 'pairing',
 		options: [
-			{ key: 'a', text: "They're so much better than me — I'd feel like I'm slowing them down with every keystroke." },
-			{ key: 'b', text: "They'd take over. My ideas wouldn't matter, and I'd just end up watching." },
-			{ key: 'c', text: "They'd judge me. Every hesitation, every wrong variable name — they'd notice and remember." },
-			{ key: 'd', text: "We just don't click. The energy would be draining, and I wouldn't be able to think clearly." }
+			{ key: 'a', text: "We'd talk it through and find a rhythm — different styles are just part of the job." },
+			{ key: 'b', text: "I'd feel some friction but adapt. It might be tiring, but I'd manage." },
+			{ key: 'c', text: "I'd struggle to speak up if their approach felt wrong — I'd rather just go along with it." },
+			{ key: 'd', text: "I'd feel trapped — their pace, their decisions, their way. I'd shut down inside." }
 		]
 	},
 	{

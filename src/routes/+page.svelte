@@ -18,7 +18,7 @@
 	let activeSection = $state('');
 
 	const tocSections = [
-		'what', 'roles', 'loops', 'expertise', 'mentoring', 'reviews',
+		'what', 'roles', 'loops', 'expertise', 'mentoring', 'pairings', 'reviews',
 		'combined-loops', 'why', 'human-problem', 'team-results', 'safety',
 		'objections', 'pitfalls', 'styles', 'when', 'session', 'ping-pong',
 		'2026', 'ai-workflows', 'mob', 'remote', 'best-practices', 'summary', 'sources'
@@ -138,10 +138,10 @@
 	const SUB_LOOP_R = 22;      // sub-loop circle radius
 
 	// Per-event gains (discrete jumps, not continuous)
-	// Slow: 3 sub-loop passes per cycle → +3.33 each, 1 feedback → -6
-	// Net per cycle: +10 - 6 = +4. ~2.86 cycles → final ≈11.4
-	const SLOW_WRITE_GAIN = 10 / 3;
-	const SLOW_FEEDBACK_LOSS = 6;
+	// Slow: 3 sub-loop passes per cycle → +3 each, 1 feedback → -5
+	// Net per cycle: +9 - 5 = +4. ~2.86 cycles → final ≈11.4
+	const SLOW_WRITE_GAIN = 3;
+	const SLOW_FEEDBACK_LOSS = 5;
 	// Fast: 1 write per cycle → +3, 1 feedback → -0.3
 	// Net per cycle: +2.7. ~13.3 cycles → final ≈36
 	const FAST_WRITE_GAIN = 3;
@@ -428,6 +428,7 @@
 		<a href="#loops" class="toc-link" class:toc-active={activeSection === 'loops'}>Small Loops Win</a>
 		<a href="#expertise" class="toc-link" class:toc-active={activeSection === 'expertise'}>The Expertise Function</a>
 		<a href="#mentoring" class="toc-link" class:toc-active={activeSection === 'mentoring'}>Mentoring Compounds Fast</a>
+		<a href="#pairings" class="toc-link" class:toc-active={activeSection === 'pairings'}>Who Pairs With Whom?</a>
 		<a href="#reviews" class="toc-link" class:toc-active={activeSection === 'reviews'}>Reviews Need Codebase Knowledge</a>
 		<a href="#combined-loops" class="toc-link" class:toc-active={activeSection === 'combined-loops'}>Two Loops, One Workflow</a>
 		<a href="#why" class="toc-link" class:toc-active={activeSection === 'why'}>Why Pair Program?</a>
@@ -825,6 +826,90 @@
 			<div class="callout">
 				<span class="callout-icon">&rarr;</span>
 				<p>Knowledge silos kill velocity. A junior who pairs with a senior learns more in weeks than one who reads documentation for months. <strong>Mentoring isn't optional — it's an investment that pays off fast.</strong></p>
+			</div>
+		</ScrollReveal>
+	</div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION: WHO PAIRS WITH WHOM?                                -->
+<!-- ============================================================ -->
+<section class="section" id="pairings">
+	<div class="container">
+		<ScrollReveal>
+			<p class="label">The Combinations</p>
+			<h2>Who Pairs With Whom?</h2>
+		</ScrollReveal>
+
+		<ScrollReveal delay={150}>
+			<p class="lead">
+				Not all pairings are equal. The experience mix changes what each person gets out of the session.
+			</p>
+		</ScrollReveal>
+
+		<div class="pairing-cards">
+			<ScrollReveal delay={200}>
+				<div class="pairing-card pairing-best">
+					<div class="pairing-header">
+						<span class="pairing-emoji">&#x1F393;&#x200D;&#x1F9D1;</span>
+						<h3>Junior + Senior</h3>
+						<span class="pairing-badge pairing-badge-best">Highest Learning</span>
+					</div>
+					<div class="pairing-body">
+						<p>The <strong>gold standard</strong> for knowledge transfer. The junior learns design thinking, shortcuts, and codebase context in real time. The senior is forced to articulate decisions &mdash; which deepens their own understanding.</p>
+						<ul class="pairing-traits">
+							<li><span class="trait-icon trait-up">&uarr;</span> Fastest skill growth for the junior</li>
+							<li><span class="trait-icon trait-up">&uarr;</span> Senior refines mentoring &amp; communication</li>
+							<li><span class="trait-icon trait-up">&uarr;</span> Knowledge silos dissolve quickly</li>
+							<li><span class="trait-icon trait-neutral">&rarr;</span> Requires patience &mdash; senior must teach, not take over</li>
+						</ul>
+					</div>
+				</div>
+			</ScrollReveal>
+
+			<ScrollReveal delay={350}>
+				<div class="pairing-card pairing-good">
+					<div class="pairing-header">
+						<span class="pairing-emoji">&#x1F91D;</span>
+						<h3>Junior + Junior</h3>
+						<span class="pairing-badge pairing-badge-good">Surprising Value</span>
+					</div>
+					<div class="pairing-body">
+						<p>Often underestimated. Two juniors <strong>teach each other constantly</strong> &mdash; explaining concepts forces understanding. They also feel safer asking "dumb" questions, leading to deeper exploration.</p>
+						<ul class="pairing-traits">
+							<li><span class="trait-icon trait-up">&uarr;</span> Both learn by explaining &amp; discussing</li>
+							<li><span class="trait-icon trait-up">&uarr;</span> Lower ego barrier &mdash; more questions asked</li>
+							<li><span class="trait-icon trait-up">&uarr;</span> Builds confidence and team bonds</li>
+							<li><span class="trait-icon trait-neutral">&rarr;</span> May need periodic senior check-ins for direction</li>
+						</ul>
+					</div>
+				</div>
+			</ScrollReveal>
+
+			<ScrollReveal delay={500}>
+				<div class="pairing-card pairing-limited">
+					<div class="pairing-header">
+						<span class="pairing-emoji">&#x1F9D1;&#x200D;&#x1F4BB;</span>
+						<h3>Senior + Senior</h3>
+						<span class="pairing-badge pairing-badge-limited">Low Teaching Effect</span>
+					</div>
+					<div class="pairing-body">
+						<p>Two experts together can solve hard problems fast, but the <strong>learning effect is small</strong>. Neither is pushed far outside their comfort zone. Better for architecture spikes &mdash; not for growing the team.</p>
+						<ul class="pairing-traits">
+							<li><span class="trait-icon trait-up">&uarr;</span> Fast throughput on complex problems</li>
+							<li><span class="trait-icon trait-down">&darr;</span> Minimal new knowledge gained by either</li>
+							<li><span class="trait-icon trait-down">&darr;</span> No mentoring multiplier for the team</li>
+							<li><span class="trait-icon trait-neutral">&rarr;</span> Best reserved for critical architecture decisions</li>
+						</ul>
+					</div>
+				</div>
+			</ScrollReveal>
+		</div>
+
+		<ScrollReveal delay={650}>
+			<div class="callout">
+				<span class="callout-icon">&rarr;</span>
+				<p>The biggest knowledge transfer happens when experience levels <strong>differ</strong>. Mix your pairs &mdash; the team grows fastest when juniors are actively included, not shielded.</p>
 			</div>
 		</ScrollReveal>
 	</div>
@@ -2101,6 +2186,123 @@
 		max-width: 700px;
 		display: block;
 		border-radius: 12px;
+	}
+
+	/* ── Pairing Combinations Cards ──────────────────────── */
+	.pairing-cards {
+		display: flex;
+		flex-direction: column;
+		gap: 1.25rem;
+		margin: 1.5rem 0 2rem;
+	}
+
+	.pairing-card {
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-sm);
+		overflow: hidden;
+		transition: border-color 0.2s;
+	}
+
+	.pairing-card:hover {
+		border-color: rgba(255, 255, 255, 0.12);
+	}
+
+	.pairing-header {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 1rem 1.25rem;
+		border-bottom: 1px solid var(--border);
+	}
+
+	.pairing-emoji {
+		font-size: 1.5rem;
+		line-height: 1;
+	}
+
+	.pairing-header h3 {
+		font-size: 1.1rem;
+		font-weight: 700;
+		color: var(--text-primary);
+		margin: 0;
+		flex: 1;
+	}
+
+	.pairing-badge {
+		font-size: 0.7rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		padding: 0.25rem 0.6rem;
+		border-radius: 999px;
+	}
+
+	.pairing-badge-best {
+		background: rgba(16, 185, 129, 0.15);
+		color: #10b981;
+	}
+
+	.pairing-badge-good {
+		background: rgba(99, 102, 241, 0.15);
+		color: #818cf8;
+	}
+
+	.pairing-badge-limited {
+		background: rgba(234, 179, 8, 0.15);
+		color: #eab308;
+	}
+
+	.pairing-body {
+		padding: 1rem 1.25rem;
+	}
+
+	.pairing-body p {
+		color: var(--text-secondary);
+		line-height: 1.6;
+		margin: 0 0 1rem;
+	}
+
+	.pairing-traits {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+	}
+
+	.pairing-traits li {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.9rem;
+		color: var(--text-secondary);
+	}
+
+	.trait-icon {
+		font-weight: 700;
+		font-size: 0.85rem;
+		width: 1.2rem;
+		text-align: center;
+		flex-shrink: 0;
+	}
+
+	.trait-up { color: #10b981; }
+	.trait-down { color: #ef4444; }
+	.trait-neutral { color: #a1a1aa; }
+
+	.pairing-best { border-left: 3px solid #10b981; }
+	.pairing-good { border-left: 3px solid #818cf8; }
+	.pairing-limited { border-left: 3px solid #eab308; }
+
+	@media (min-width: 768px) {
+		.pairing-cards {
+			flex-direction: row;
+		}
+		.pairing-card {
+			flex: 1;
+		}
 	}
 
 	/* ── Section 3: Interactive Formula ────────────────────── */
