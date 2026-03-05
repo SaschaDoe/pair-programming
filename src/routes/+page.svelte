@@ -8,6 +8,7 @@
 	import PingPongDiagram from '$lib/components/PingPongDiagram.svelte';
 	import ExpertiseFormula from '$lib/components/ExpertiseFormula.svelte';
 	import CombinedLoopDiagram from '$lib/components/CombinedLoopDiagram.svelte';
+	import KanbanBoard from '$lib/components/KanbanBoard.svelte';
 	import {
 		benefits, safetyTips, classicObjections, pitfalls, pairingStyles,
 		whenColumns, sessionSteps, bestPractices, summaryCards, sources,
@@ -16,11 +17,12 @@
 
 	let tocOpen = $state(false);
 	let activeSection = $state('');
+	let pinnedSummary = $state(new Set<number>());
 
 	const tocSections = [
 		'what', 'roles', 'loops', 'expertise', 'mentoring', 'pairings', 'reviews',
 		'combined-loops', 'why', 'human-problem', 'team-results', 'safety',
-		'objections', 'pitfalls', 'styles', 'when', 'session', 'ping-pong',
+		'objections', 'pitfalls', 'styles', 'kanban', 'when', 'session', 'ping-pong',
 		'2026', 'ai-workflows', 'mob', 'remote', 'best-practices', 'summary', 'sources'
 	];
 
@@ -204,13 +206,13 @@
 		const subLoopCirc = 2 * Math.PI * SUB_LOOP_R;  // ≈138
 		const mainLoopLen = slowTotal - 3 * subLoopCirc;
 
-		// Slow events: chart jumps up at start of each sub-loop,
-		// drops at ~80% through the main loop section (Get Feedback position)
+		// Slow events: fire at sub-loop entry positions (synced with Write Code dot animation)
+		const feedbackDist = 3 * subLoopCirc + 0.78 * mainLoopLen;
 		const slowEvents: LoopEvent[] = [
-			{ dist: 0, type: 'write' },                                          // entering sub-loop 1
-			{ dist: subLoopCirc, type: 'write' },                                // entering sub-loop 2
-			{ dist: 2 * subLoopCirc, type: 'write' },                            // entering sub-loop 3
-			{ dist: 3 * subLoopCirc + 0.78 * mainLoopLen, type: 'feedback' },    // Get Feedback
+			{ dist: 0,                type: 'write' },    // sub-loop 1
+			{ dist: subLoopCirc,      type: 'write' },    // sub-loop 2
+			{ dist: 2 * subLoopCirc,  type: 'write' },    // sub-loop 3
+			{ dist: feedbackDist,     type: 'feedback' }, // Get Feedback
 		];
 
 		const fastTotal = fastPathEl.getTotalLength();
@@ -225,6 +227,7 @@
 		let fastEventIdx = -1;
 		let prevSlowCycle = -1;
 		let prevFastCycle = -1;
+		let slowChartX = CHART_X_MIN; // event-driven x for red chart (not time-based)
 
 		// Write → diagonal rise (spread over RISE_DX pixels on x-axis)
 		// Feedback → near-vertical drop (spread over DROP_DX pixels)
@@ -243,15 +246,15 @@
 
 			if (loop === 'slow') {
 				if (type === 'write') {
+					slowChartX = Math.min(slowChartX + RISE_DX, CHART_X_MAX);
 					slowProgress += SLOW_WRITE_GAIN;
 					slowChartPts = [...slowChartPts,
-						{ x: Math.min(x + RISE_DX, CHART_X_MAX), y: progressToY(slowProgress) }
+						{ x: slowChartX, y: progressToY(slowProgress) }
 					];
 				} else {
-					const lastX = slowChartPts.length > 0 ? slowChartPts[slowChartPts.length - 1].x : x;
 					slowProgress = Math.max(0, slowProgress - SLOW_FEEDBACK_LOSS);
 					slowChartPts = [...slowChartPts,
-						{ x: lastX, y: progressToY(slowProgress) }
+						{ x: slowChartX, y: progressToY(slowProgress) }
 					];
 				}
 			} else {
@@ -442,6 +445,7 @@
 		<a href="#objections" class="toc-link" class:toc-active={activeSection === 'objections'}>Classic Objections</a>
 		<a href="#pitfalls" class="toc-link" class:toc-active={activeSection === 'pitfalls'}>Common Pitfalls</a>
 		<a href="#styles" class="toc-link" class:toc-active={activeSection === 'styles'}>Pairing Styles</a>
+		<a href="#kanban" class="toc-link" class:toc-active={activeSection === 'kanban'}>Task vs. Feature</a>
 		<a href="#when" class="toc-link" class:toc-active={activeSection === 'when'}>When to Pair</a>
 		<a href="#session" class="toc-link" class:toc-active={activeSection === 'session'}>Session Structure</a>
 		<a href="#ping-pong" class="toc-link" class:toc-active={activeSection === 'ping-pong'}>Ping-Pong Pairing</a>
@@ -850,68 +854,32 @@
 		<div class="pairing-cards">
 			<ScrollReveal delay={200}>
 				<div class="pairing-card pairing-best">
-					<div class="pairing-header">
-						<span class="pairing-emoji">&#x1F393;&#x200D;&#x1F9D1;</span>
-						<h3>Junior + Senior</h3>
-						<span class="pairing-badge pairing-badge-best">Highest Learning</span>
-					</div>
-					<div class="pairing-body">
-						<p>The <strong>gold standard</strong> for knowledge transfer. The junior learns design thinking, shortcuts, and codebase context in real time. The senior is forced to articulate decisions &mdash; which deepens their own understanding.</p>
-						<ul class="pairing-traits">
-							<li><span class="trait-icon trait-up">&uarr;</span> Fastest skill growth for the junior</li>
-							<li><span class="trait-icon trait-up">&uarr;</span> Senior refines mentoring &amp; communication</li>
-							<li><span class="trait-icon trait-up">&uarr;</span> Knowledge silos dissolve quickly</li>
-							<li><span class="trait-icon trait-neutral">&rarr;</span> Requires patience &mdash; senior must teach, not take over</li>
-						</ul>
+					<span class="pairing-rank">01</span>
+					<div class="pairing-info">
+						<h3>Junior + Junior</h3>
+						<p>Both want to learn and both bring their own knowledge. No one holds back &mdash; questions flow freely, and explaining forces understanding for both.</p>
 					</div>
 				</div>
 			</ScrollReveal>
-
 			<ScrollReveal delay={350}>
 				<div class="pairing-card pairing-good">
-					<div class="pairing-header">
-						<span class="pairing-emoji">&#x1F91D;</span>
-						<h3>Junior + Junior</h3>
-						<span class="pairing-badge pairing-badge-good">Surprising Value</span>
-					</div>
-					<div class="pairing-body">
-						<p>Often underestimated. Two juniors <strong>teach each other constantly</strong> &mdash; explaining concepts forces understanding. They also feel safer asking "dumb" questions, leading to deeper exploration.</p>
-						<ul class="pairing-traits">
-							<li><span class="trait-icon trait-up">&uarr;</span> Both learn by explaining &amp; discussing</li>
-							<li><span class="trait-icon trait-up">&uarr;</span> Lower ego barrier &mdash; more questions asked</li>
-							<li><span class="trait-icon trait-up">&uarr;</span> Builds confidence and team bonds</li>
-							<li><span class="trait-icon trait-neutral">&rarr;</span> May need periodic senior check-ins for direction</li>
-						</ul>
+					<span class="pairing-rank">02</span>
+					<div class="pairing-info">
+						<h3>Junior + Senior</h3>
+						<p>Strong knowledge transfer, but asymmetric &mdash; one person ends up teaching. The junior grows fast; the senior refines communication. The asymmetry costs some efficiency.</p>
 					</div>
 				</div>
 			</ScrollReveal>
-
 			<ScrollReveal delay={500}>
 				<div class="pairing-card pairing-limited">
-					<div class="pairing-header">
-						<span class="pairing-emoji">&#x1F9D1;&#x200D;&#x1F4BB;</span>
+					<span class="pairing-rank">03</span>
+					<div class="pairing-info">
 						<h3>Senior + Senior</h3>
-						<span class="pairing-badge pairing-badge-limited">Low Teaching Effect</span>
-					</div>
-					<div class="pairing-body">
-						<p>Two experts together can solve hard problems fast, but the <strong>learning effect is small</strong>. Neither is pushed far outside their comfort zone. Better for architecture spikes &mdash; not for growing the team.</p>
-						<ul class="pairing-traits">
-							<li><span class="trait-icon trait-up">&uarr;</span> Fast throughput on complex problems</li>
-							<li><span class="trait-icon trait-down">&darr;</span> Minimal new knowledge gained by either</li>
-							<li><span class="trait-icon trait-down">&darr;</span> No mentoring multiplier for the team</li>
-							<li><span class="trait-icon trait-neutral">&rarr;</span> Best reserved for critical architecture decisions</li>
-						</ul>
+						<p>Fast on hard problems, minimal learning for either. No mentoring effect. Best reserved for critical architecture work, not for growing the team.</p>
 					</div>
 				</div>
 			</ScrollReveal>
 		</div>
-
-		<ScrollReveal delay={650}>
-			<div class="callout">
-				<span class="callout-icon">&rarr;</span>
-				<p>The biggest knowledge transfer happens when experience levels <strong>differ</strong>. Mix your pairs &mdash; the team grows fastest when juniors are actively included, not shielded.</p>
-			</div>
-		</ScrollReveal>
 	</div>
 </section>
 
@@ -1285,9 +1253,24 @@
 </section>
 
 <!-- ============================================================ -->
+<!-- KANBAN: TASK vs FEATURE                                      -->
+<!-- ============================================================ -->
+<section class="section section-alt" id="kanban">
+	<div class="container">
+		<ScrollReveal>
+			<p class="label">Task vs. Feature</p>
+			<h2>How Work Gets Organized</h2>
+		</ScrollReveal>
+		<ScrollReveal delay={150}>
+			<KanbanBoard />
+		</ScrollReveal>
+	</div>
+</section>
+
+<!-- ============================================================ -->
 <!-- WHEN TO PAIR                                                 -->
 <!-- ============================================================ -->
-<section class="section section-alt" id="when">
+<section class="section" id="when">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Decision</p>
@@ -1313,7 +1296,7 @@
 <!-- ============================================================ -->
 <!-- SESSION STRUCTURE                                            -->
 <!-- ============================================================ -->
-<section class="section" id="session">
+<section class="section section-alt" id="session">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Rhythm</p>
@@ -1343,7 +1326,7 @@
 <!-- ============================================================ -->
 <!-- TDD PING-PONG VISUALIZATION                                  -->
 <!-- ============================================================ -->
-<section class="section section-alt" id="ping-pong">
+<section class="section" id="ping-pong">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">TDD In Action</p>
@@ -1367,7 +1350,7 @@
 <!-- ============================================================ -->
 <!-- THE 2026 QUESTION                                            -->
 <!-- ============================================================ -->
-<section class="section" id="2026">
+<section class="section section-alt" id="2026">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Elephant in the Room</p>
@@ -1428,7 +1411,7 @@
 <!-- ============================================================ -->
 <!-- AI WORKFLOWS                                                 -->
 <!-- ============================================================ -->
-<section class="section section-alt" id="ai-workflows">
+<section class="section" id="ai-workflows">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">Human + Machine</p>
@@ -1486,7 +1469,7 @@
 <!-- ============================================================ -->
 <!-- MOB PROGRAMMING                                              -->
 <!-- ============================================================ -->
-<section class="section" id="mob">
+<section class="section section-alt" id="mob">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">Beyond Pairing</p>
@@ -1577,7 +1560,7 @@
 <!-- ============================================================ -->
 <!-- REMOTE PAIRING                                               -->
 <!-- ============================================================ -->
-<section class="section section-alt" id="remote">
+<section class="section" id="remote">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">Distributed Teams</p>
@@ -1622,7 +1605,7 @@
 <!-- ============================================================ -->
 <!-- BEST PRACTICES                                               -->
 <!-- ============================================================ -->
-<section class="section" id="best-practices">
+<section class="section section-alt" id="best-practices">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">The Playbook</p>
@@ -1647,7 +1630,7 @@
 <!-- ============================================================ -->
 <!-- SUMMARY                                                      -->
 <!-- ============================================================ -->
-<section class="section section-alt" id="summary">
+<section class="section" id="summary">
 	<div class="container">
 		<ScrollReveal>
 			<p class="label">At a Glance</p>
@@ -1656,8 +1639,12 @@
 
 		<ScrollReveal delay={150}>
 			<div class="summary-grid">
-				{#each summaryCards as card}
-					<div class="summary-card">
+				{#each summaryCards as card, i}
+					<div
+						class="summary-card"
+						class:pinned={pinnedSummary.has(i)}
+						onclick={() => pinnedSummary.has(i) ? pinnedSummary.delete(i) : pinnedSummary.add(i)}
+					>
 						<h3>{card.title}</h3>
 						<p>{card.description}</p>
 					</div>
@@ -2192,118 +2179,52 @@
 	.pairing-cards {
 		display: flex;
 		flex-direction: column;
-		gap: 1.25rem;
-		margin: 1.5rem 0 2rem;
-	}
-
-	.pairing-card {
-		background: var(--bg-card);
+		margin: 2rem 0;
 		border: 1px solid var(--border);
 		border-radius: var(--radius-sm);
 		overflow: hidden;
-		transition: border-color 0.2s;
 	}
 
-	.pairing-card:hover {
-		border-color: rgba(255, 255, 255, 0.12);
-	}
-
-	.pairing-header {
+	.pairing-card {
 		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		padding: 1rem 1.25rem;
-		border-bottom: 1px solid var(--border);
+		align-items: flex-start;
+		gap: 1.5rem;
+		padding: 1.25rem 1.5rem;
+		background: var(--bg-card);
+		border-left: 3px solid transparent;
 	}
 
-	.pairing-emoji {
-		font-size: 1.5rem;
-		line-height: 1;
+	.pairing-card + .pairing-card {
+		border-top: 1px solid var(--border);
 	}
 
-	.pairing-header h3 {
-		font-size: 1.1rem;
-		font-weight: 700;
-		color: var(--text-primary);
-		margin: 0;
-		flex: 1;
-	}
-
-	.pairing-badge {
+	.pairing-rank {
 		font-size: 0.7rem;
 		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		padding: 0.25rem 0.6rem;
-		border-radius: 999px;
-	}
-
-	.pairing-badge-best {
-		background: rgba(16, 185, 129, 0.15);
-		color: #10b981;
-	}
-
-	.pairing-badge-good {
-		background: rgba(99, 102, 241, 0.15);
-		color: #818cf8;
-	}
-
-	.pairing-badge-limited {
-		background: rgba(234, 179, 8, 0.15);
-		color: #eab308;
-	}
-
-	.pairing-body {
-		padding: 1rem 1.25rem;
-	}
-
-	.pairing-body p {
+		letter-spacing: 0.08em;
 		color: var(--text-secondary);
-		line-height: 1.6;
-		margin: 0 0 1rem;
+		padding-top: 0.2rem;
+		flex-shrink: 0;
+		width: 1.5rem;
 	}
 
-	.pairing-traits {
-		list-style: none;
-		padding: 0;
-		margin: 0;
-		display: flex;
-		flex-direction: column;
-		gap: 0.4rem;
+	.pairing-info h3 {
+		font-size: 1rem;
+		font-weight: 700;
+		color: var(--text-primary);
+		margin: 0 0 0.4rem;
 	}
 
-	.pairing-traits li {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
+	.pairing-info p {
 		font-size: 0.9rem;
 		color: var(--text-secondary);
+		line-height: 1.6;
+		margin: 0;
 	}
 
-	.trait-icon {
-		font-weight: 700;
-		font-size: 0.85rem;
-		width: 1.2rem;
-		text-align: center;
-		flex-shrink: 0;
-	}
-
-	.trait-up { color: #10b981; }
-	.trait-down { color: #ef4444; }
-	.trait-neutral { color: #a1a1aa; }
-
-	.pairing-best { border-left: 3px solid #10b981; }
-	.pairing-good { border-left: 3px solid #818cf8; }
-	.pairing-limited { border-left: 3px solid #eab308; }
-
-	@media (min-width: 768px) {
-		.pairing-cards {
-			flex-direction: row;
-		}
-		.pairing-card {
-			flex: 1;
-		}
-	}
+	.pairing-best { border-left-color: #10b981; }
+	.pairing-good { border-left-color: #818cf8; }
+	.pairing-limited { border-left-color: #52525b; }
 
 	/* ── Section 3: Interactive Formula ────────────────────── */
 	.formula-diagram-wrap {
@@ -2805,6 +2726,7 @@
 		border-radius: var(--radius);
 		padding: 1.5rem;
 		transition: border-color 0.3s;
+		cursor: default;
 	}
 
 	.summary-card:hover {
@@ -2824,6 +2746,18 @@
 		font-size: 0.9rem;
 		color: var(--text-secondary);
 		line-height: 1.6;
+		opacity: 0;
+		transition: opacity 0.3s ease;
+	}
+
+	.summary-card:hover p,
+	.summary-card.pinned p {
+		opacity: 1;
+	}
+
+	.summary-card.pinned {
+		border-color: var(--accent);
+		cursor: pointer;
 	}
 
 	/* ── Sources ──────────────────────────────────────────────── */

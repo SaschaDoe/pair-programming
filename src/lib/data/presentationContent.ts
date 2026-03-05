@@ -238,17 +238,14 @@ export const bestPractices: BestPractice[] = [
 ];
 
 export const summaryCards: SummaryCard[] = [
-	{ title: 'What', description: 'Two developers, one workstation. Driver codes, Navigator reviews. Switch regularly.' },
-	{ title: 'Why', description: 'Fewer bugs, better design, knowledge transfer, shared ownership, real-time review.' },
-	{ title: 'How', description: 'Driver–Navigator, Ping-Pong, or Strong-Style. Use a timer. 15–25 min rotations.' },
-	{ title: 'When', description: 'Always: security, payments, core logic, onboarding. Skip: routine, isolated, exploratory.' },
-	{ title: 'Session', description: 'Align on goal, code together, switch roles, break hourly, recap at the end.' },
-	{ title: 'Watch Out', description: 'Fatigue, personality clashes, disengaged navigators, backseat driving.' },
-	{ title: 'Safety', description: "Pairing requires vulnerability. Build psychological safety first — normalise not-knowing, start low-stakes, celebrate mistakes." },
-	{ title: 'AI', description: 'Use AI for boilerplate and prototyping. Use human pairs for architecture, security, and shared understanding.' },
-	{ title: 'The Human Problem', description: "Most teams don't pair because it feels unsafe, not because it doesn't work. Fix the culture, then the process." },
-	{ title: 'Remote', description: "VS Code Live Share, good audio, over-communicate, driver's cursor, more breaks." },
-	{ title: 'Mob', description: 'Whole team, one screen. One driver, many navigators. Rotate every 10–15 min.' },
+	{ title: 'Two minds, one keyboard', description: 'Driver writes, Navigator thinks ahead. Roles rotate every 15–25 minutes — neither person coasts.' },
+	{ title: 'Tight loops are the point', description: 'The shorter the feedback cycle, the cheaper every mistake. Pairing collapses the loop from days to seconds.' },
+	{ title: 'Pick your pair deliberately', description: 'Junior + Junior: both learn fastest. Junior + Senior: strong transfer, one-sided effort. Senior + Senior: save it for hard architecture.' },
+	{ title: 'Not for everything', description: 'Default to pairing on security, payments, onboarding, and core logic. Skip routine scripts, isolated spikes, and personal exploration.' },
+	{ title: 'Structure the session', description: 'Agree on the goal before you start. Switch roles actively. Break after 60–90 minutes. Close with a short recap.' },
+	{ title: 'Culture before process', description: "Most teams don't pair because it feels exposed, not because it's inefficient. Psychological safety has to come first." },
+	{ title: 'AI changes the what, not the why', description: 'AI handles the boilerplate. The reason to pair — shared understanding, trust, growing your team — stays exactly the same.' },
+	{ title: 'Common failure modes', description: 'One person drives the whole session. Navigator goes passive. No breaks. Skipping it when stressed — which is exactly when you need it most.' },
 ];
 
 export const sources: Source[] = [

@@ -16,10 +16,10 @@
 		return () => window.removeEventListener('scroll', onScroll);
 	});
 
-	let opPhotos  = $derived(fadeCalc(originScroll, -0.01, 0.02, 0.18, 0.28));
-	let opText    = $derived(fadeCalc(originScroll, 0.20, 0.30, 0.45, 0.55));
-	let opBullets = $derived(fadeCalc(originScroll, 0.48, 0.58, 0.72, 0.82));
-	let opGermany = $derived(fadeCalc(originScroll, 0.75, 0.85, 0.97, 1.01));
+	let opPhotos    = $derived(fadeCalc(originScroll, -0.01, 0.02, 0.18, 0.28));
+	let opText      = $derived(fadeCalc(originScroll, 0.20, 0.30, 0.45, 0.55));
+	let opBullets   = $derived(fadeCalc(originScroll, 0.48, 0.58, 1.1, 1.2));
+	let redProgress = $derived(fadeCalc(originScroll, 0.72, 0.82, 1.1, 1.2));
 </script>
 
 <section class="origin-scroll" bind:this={originWrapper}>
@@ -68,20 +68,15 @@
 				<div class="origin-phase" style="opacity: {opBullets}; transform: translateY({(1 - opBullets) * 30}px);">
 					<p class="lead" style="margin-bottom: 1.5rem;">Extreme Programming in a nutshell:</p>
 					<ul class="origin-bullets">
-						{#each xpBullets as bullet}
-							<li><strong>{bullet.bold}</strong> — {bullet.text}</li>
+						{#each xpBullets as bullet, i}
+							<li style={i === 1 || i === 3 ? `color: color-mix(in srgb, #ef4444 ${redProgress * 100}%, var(--text-secondary))` : ''}>
+								<strong>{bullet.bold}</strong> — {bullet.text}
+							</li>
 						{/each}
 					</ul>
 				</div>
 
-				<!-- Phase 4: Germany note -->
-				<div class="origin-phase" style="opacity: {opGermany}; transform: translateY({(1 - opGermany) * 30}px);">
-					<div class="era-tag">
-						<span class="era-dot"></span>
-						<p>Neither TDD nor pair programming ever fully took hold in the German dev community. In 2026, that seems more unlikely than ever.</p>
-					</div>
 				</div>
-			</div>
 		</div>
 	</div>
 </section>
