@@ -164,9 +164,6 @@
 				</p>
 			</div>
 
-			<div class="results-actions">
-				<a href="/" class="btn-primary">See How Others Answered</a>
-			</div>
 		</div>
 
 	{:else if showSectionIntro && (currentIndex === 0 || currentIndex === 10)}
@@ -541,9 +538,5 @@
 		border-left: 2px solid var(--accent);
 		padding-left: 1rem;
 		margin-top: 1.5rem;
-	}
-
-	.results-actions {
-		text-align: center;
 	}
 </style>
