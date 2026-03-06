@@ -9,7 +9,7 @@
 			<h2>A Real Example</h2>
 		</ScrollReveal>
 		<ScrollReveal delay={100}>
-			<p class="lead">Let's walk through a pairing session: building a login form together.</p>
+			<p class="lead">A pairing session: building a login form. Here's how it actually unfolds.</p>
 		</ScrollReveal>
 
 		<div class="timeline">
@@ -17,11 +17,15 @@
 				<div class="timeline-item">
 					<div class="timeline-time">0:00</div>
 					<div class="timeline-content">
-						<h3>Agree on the task</h3>
+						<h3>Quick alignment</h3>
 						<div class="dialogue">
-							<div class="dialogue-line both">
-								<span class="speaker">Both</span>
-								<p>"Let's build the login form. We need email input, password field, validation, and error handling."</p>
+							<div class="dialogue-line navigator-line">
+								<span class="speaker nav">Navigator</span>
+								<p>"Before you start — should we validate on blur or on submit? I've been burned by over-eager inline errors before."</p>
+							</div>
+							<div class="dialogue-line driver-line">
+								<span class="speaker drv">Driver</span>
+								<p>"Good point. On blur — but only show the error after the first submit attempt."</p>
 							</div>
 						</div>
 					</div>
@@ -30,21 +34,18 @@
 
 			<ScrollReveal delay={300}>
 				<div class="timeline-item">
-					<div class="timeline-time">0:02</div>
+					<div class="timeline-time">0:05</div>
 					<div class="timeline-content">
-						<h3>Driver starts, Navigator guides</h3>
+						<h3>Coding — Navigator keeps the bigger picture</h3>
 						<div class="dialogue">
 							<div class="dialogue-line navigator-line">
 								<span class="speaker nav">Navigator</span>
-								<p>"Don't forget the aria-label for accessibility on the input fields."</p>
+								<p>"The input's missing an <code>aria-label</code> — screenreaders won't know what this field is."</p>
 							</div>
 							<div class="dialogue-line driver-line">
 								<span class="speaker drv">Driver</span>
-								<p>"Good catch — adding it now."</p>
+								<p>"Good catch, I was focused on the type. Adding it now."</p>
 							</div>
-						</div>
-						<div class="timeline-insight">
-							Catch #1 — Accessibility issue prevented before it existed.
 						</div>
 					</div>
 				</div>
@@ -52,21 +53,22 @@
 
 			<ScrollReveal delay={400}>
 				<div class="timeline-item">
-					<div class="timeline-time">0:10</div>
+					<div class="timeline-time">0:12</div>
 					<div class="timeline-content">
-						<h3>Navigator spots a performance issue</h3>
+						<h3>A design disagreement</h3>
 						<div class="dialogue">
+							<div class="dialogue-line driver-line">
+								<span class="speaker drv">Driver</span>
+								<p>"I'm going to validate the email on every keystroke."</p>
+							</div>
 							<div class="dialogue-line navigator-line">
 								<span class="speaker nav">Navigator</span>
-								<p>"We should debounce the email validation — otherwise it fires on every keystroke."</p>
+								<p>"That'll hammer the API. What if we debounce — 300ms? I can look up the exact syntax while you keep typing."</p>
 							</div>
 							<div class="dialogue-line driver-line">
 								<span class="speaker drv">Driver</span>
-								<p>"Right, that would hammer the API. Let me add a 300ms debounce."</p>
+								<p>"Yeah, that's better. Paste it when you have it."</p>
 							</div>
-						</div>
-						<div class="timeline-insight">
-							Catch #2 — Performance issue caught before reaching production.
 						</div>
 					</div>
 				</div>
@@ -76,29 +78,44 @@
 				<div class="timeline-item switch">
 					<div class="timeline-time">0:25</div>
 					<div class="timeline-content">
-						<h3>Role switch</h3>
-						<p class="switch-text">Pomodoro timer rings. Driver becomes Navigator. Navigator becomes Driver.</p>
+						<h3>Role switch — and the real knowledge transfer begins</h3>
+						<p class="switch-text">Timer rings. They swap keyboard.</p>
+						<div class="dialogue switch-dialogue">
+							<div class="dialogue-line navigator-line">
+								<span class="speaker nav">Former Driver (now Navigator)</span>
+								<p>"Hey — I saw you used <kbd>Ctrl+D</kbd> to select that pattern a few times. Did you know you can <kbd>Alt+Click</kbd> for multi-cursor and do all five at once?"</p>
+							</div>
+							<div class="dialogue-line driver-line">
+								<span class="speaker drv">Former Navigator (now Driver)</span>
+								<p>"No way, I never used that. Show me after. — Also, while I was watching: that validation logic is going to end up in three places. Can I extract it into a custom hook while I drive?"</p>
+							</div>
+							<div class="dialogue-line navigator-line">
+								<span class="speaker nav">Former Driver (now Navigator)</span>
+								<p>"Do it. And name it <code>useLoginValidation</code>, not <code>useForm</code> — we'll have other forms."</p>
+							</div>
+						</div>
 					</div>
 				</div>
 			</ScrollReveal>
 
 			<ScrollReveal delay={600}>
 				<div class="timeline-item">
-					<div class="timeline-time">0:27</div>
+					<div class="timeline-time">0:30</div>
 					<div class="timeline-content">
-						<h3>New Driver adds error handling</h3>
+						<h3>Fresh eyes catch what familiarity missed</h3>
 						<div class="dialogue">
 							<div class="dialogue-line navigator-line">
-								<span class="speaker nav">New Navigator</span>
-								<p>"What happens if the API returns a 429? We need rate-limit handling."</p>
+								<span class="speaker nav">Navigator</span>
+								<p>"What happens if the server returns a 429? We have no retry logic."</p>
 							</div>
 							<div class="dialogue-line driver-line">
-								<span class="speaker drv">New Driver</span>
-								<p>"I wouldn't have thought of that solo. Adding a retry with backoff."</p>
+								<span class="speaker drv">Driver</span>
+								<p>"I would have shipped that gap solo. Adding exponential backoff — I've got a utility for that already."</p>
 							</div>
-						</div>
-						<div class="timeline-insight">
-							Catch #3 — Edge case handled that would have been missed alone.
+							<div class="dialogue-line navigator-line">
+								<span class="speaker nav">Navigator</span>
+								<p>"Perfect. And cap it at 3 retries so we don't silently loop forever."</p>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -109,10 +126,7 @@
 					<div class="timeline-time">0:45</div>
 					<div class="timeline-content">
 						<h3>Done</h3>
-						<p>Login form completed with accessibility, debounced validation, and rate-limit handling — <strong>built in 45 minutes with zero bugs in review</strong>.</p>
-						<div class="result-callout">
-							The navigator caught <strong>3 issues</strong> that would have been missed in solo development. Total review comments on the PR: <strong>0</strong>.
-						</div>
+						<p>Login form shipped — accessible, debounced, with retry logic and a clean hook. The navigator learned a multi-cursor shortcut. The driver got a naming convention and a refactoring idea they carried into the next feature.</p>
 					</div>
 				</div>
 			</ScrollReveal>
@@ -184,13 +198,17 @@
 		color: #facc15;
 		font-weight: 500;
 		font-size: 0.95rem;
+		margin-bottom: 0.75rem;
 	}
 
 	.dialogue {
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
-		margin-bottom: 0.75rem;
+	}
+
+	.switch-dialogue {
+		margin-top: 0.75rem;
 	}
 
 	.dialogue-line {
@@ -204,6 +222,19 @@
 		font-size: 0.9rem;
 		color: var(--text-secondary);
 		font-style: italic;
+		margin: 0;
+	}
+
+	.dialogue-line code,
+	.dialogue-line kbd {
+		font-style: normal;
+		font-family: monospace;
+		font-size: 0.82rem;
+		background: rgba(255,255,255,0.07);
+		padding: 0.1em 0.35em;
+		border-radius: 4px;
+		border: 1px solid var(--border);
+		color: var(--text-primary);
 	}
 
 	.speaker {
@@ -211,41 +242,17 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
-		margin-bottom: 0.2rem;
+		margin-bottom: 0.35rem;
 		display: block;
 	}
 
-	.speaker.nav {
-		color: #c084fc;
-	}
-
-	.speaker.drv {
-		color: #818cf8;
-	}
-
-	.timeline-insight {
-		font-size: 0.85rem;
-		font-weight: 500;
-		color: #34d399;
-		padding: 0.5rem 0;
-	}
-
-	.result-callout {
-		margin-top: 1rem;
-		padding: 1rem 1.25rem;
-		background: rgba(52, 211, 153, 0.06);
-		border: 1px solid rgba(52, 211, 153, 0.15);
-		border-radius: var(--radius-sm);
-		font-size: 0.95rem;
-		color: var(--text-secondary);
-	}
-
-	.result-callout strong {
-		color: #34d399;
-	}
+	.speaker.nav { color: #c084fc; }
+	.speaker.drv { color: #818cf8; }
 
 	.timeline-item.done p {
 		color: var(--text-secondary);
+		font-size: 0.95rem;
+		line-height: 1.65;
 	}
 
 	.timeline-item.done p strong {

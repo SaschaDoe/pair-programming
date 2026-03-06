@@ -256,7 +256,7 @@ export const sources: Source[] = [
 	},
 	{
 		title: 'The Costs and Benefits of Pair Programming',
-		url: 'https://collaboration.csc.ncsu.edu/laurie/Papers/XPSardinia.PDF',
+		url: 'https://www.cs.utexas.edu/~ans/classes/cs439/projects/XPSardinia.PDF',
 		meta: 'Cockburn, A. &amp; Williams, L. (2000). Proceedings of the First International Conference on Extreme Programming (XP2000).',
 	},
 	{
@@ -281,7 +281,7 @@ export const sources: Source[] = [
 	},
 	{
 		title: 'Promiscuous Pairing and Beginner\'s Mind',
-		url: 'https://ieeexplore.ieee.org/document/1667588',
+		url: 'https://ieeexplore.ieee.org/document/1609811',
 		meta: 'Belshee, A. (2005). Agile Development Conference (ADC\'05), IEEE.',
 	},
 	{
@@ -291,7 +291,7 @@ export const sources: Source[] = [
 	},
 	{
 		title: 'Project Aristotle: Understanding Team Effectiveness',
-		url: 'https://rework.withgoogle.com/guides/understanding-team-effectiveness/',
+		url: 'https://rework.withgoogle.com/intl/en/guides/understanding-team-effectiveness',
 		meta: 'Google re:Work (2015). Psychological safety as the #1 factor in high-performing teams.',
 	},
 ];

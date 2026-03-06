@@ -192,6 +192,15 @@ h3 {
 	color: var(--text-primary);
 }
 
+.callout-warning {
+	background: rgba(251, 146, 60, 0.06);
+	border-color: rgba(251, 146, 60, 0.3);
+}
+
+.callout-warning .callout-icon {
+	color: #fb923c;
+}
+
 /* ── Design System: Tip ──────────────────────────────────── */
 .tips-grid {
 	display: flex;

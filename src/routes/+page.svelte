@@ -1522,7 +1522,6 @@
 					<h3>Tooling</h3>
 					<ul>
 						<li><strong>Mob Timer</strong> — mobti.me or Mobster app</li>
-						<li><strong>VS Code Live Share</strong> — real-time collaborative editing</li>
 						<li><strong>Screen sharing</strong> — Zoom, Teams, or Google Meet</li>
 						<li><strong>Shared workspace</strong> — Tuple, Pop, or CodeTogether</li>
 					</ul>
@@ -1556,8 +1555,7 @@
 				<div class="card">
 					<h3>Essential Tools</h3>
 					<ul>
-						<li><strong>VS Code Live Share</strong> — both edit the same codebase</li>
-						<li><strong>JetBrains Code With Me</strong> — same, for IntelliJ users</li>
+						<li><strong>Commit &amp; switch</strong> — one dev commits, the other pulls and takes over</li>
 						<li><strong>Screen sharing</strong> — Zoom, Teams, Discord</li>
 						<li><strong>Good audio</strong> — headsets, mute when not talking</li>
 					</ul>
@@ -1576,9 +1574,9 @@
 			</ScrollReveal>
 		</div>
 		<ScrollReveal delay={500}>
-			<div class="callout">
-				<span class="callout-icon">&bull;</span>
-				<p><strong>Audio is essential. Video is optional.</strong> A stable connection and a good mic matter more than seeing each other's face.</p>
+			<div class="callout callout-warning">
+				<span class="callout-icon">&#x26A0;</span>
+				<p><strong>Skip "collaborative editing" plugins like VS Code Live Share or JetBrains Code With Me.</strong> They sound great in theory but are brittle in practice — sessions drop, extensions break, and debugging shared state is a nightmare. <strong>Commit &amp; switch</strong> is simpler, more reliable, and keeps your history clean.</p>
 			</div>
 		</ScrollReveal>
 	</div>

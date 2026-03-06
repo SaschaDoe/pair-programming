@@ -51,8 +51,52 @@
 </script>
 
 <div class="cl-wrap">
-	<!-- Diagram -->
-	<div class="cl-diagram">
+	<!-- Explanation -->
+	<p class="cl-insight">
+		The small loop catches the basics &mdash; freeing the big review to focus on what <strong>actually matters</strong>. Sort the topics:
+	</p>
+
+	<!-- Main row: green zone | diagram | blue zone -->
+	<div class="cl-main">
+		<!-- Blue zone: code review / big loop -->
+		<div
+			class="cl-zone cl-zone-blue"
+			class:zone-over={dragOver === 'blue'}
+			class:zone-drag-active={dragChip !== null}
+			ondragover={(e) => { e.preventDefault(); dragOver = 'blue'; }}
+			ondragleave={() => { if (dragOver === 'blue') dragOver = null; }}
+			ondrop={() => drop('blue')}
+			role="region"
+			aria-label="Get Feedback (Code Review) drop zone"
+		>
+			<div class="cl-zone-header">
+				<span class="cl-zone-dot" style="background:#818cf8;"></span>
+				<span class="cl-zone-title" style="color:#818cf8;">Get Feedback</span>
+				<span class="cl-zone-sub">Code review loop</span>
+			</div>
+			<div class="cl-zone-chips">
+				{#each blueSlot as chip (chip.id)}
+					<div
+						class="cl-chip cl-chip-blue"
+						class:dragging={dragChip?.id === chip.id}
+						draggable="true"
+						ondragstart={(e) => { e.dataTransfer!.effectAllowed = 'move'; startDrag(chip, 'blue'); }}
+						ondragend={endDrag}
+						role="button"
+						tabindex="0"
+					>
+						<span class="cl-chip-icon">{chip.icon}</span>
+						{chip.label}
+					</div>
+				{/each}
+				{#if blueSlot.length === 0}
+					<span class="cl-zone-empty">Drop here</span>
+				{/if}
+			</div>
+		</div>
+
+		<!-- Diagram (center) -->
+		<div class="cl-diagram">
 		<div class="cl-track">
 			<svg viewBox="-50 0 500 380" class="cl-svg">
 				<!-- Main big loop track (indigo) -->
@@ -86,13 +130,6 @@
 		</div>
 	</div>
 
-	<!-- Explanation -->
-	<p class="cl-insight">
-		The small loop catches the basics &mdash; freeing the big review to focus on what <strong>actually matters</strong>. Sort the topics:
-	</p>
-
-	<!-- Two drop zones -->
-	<div class="cl-zones">
 		<!-- Green zone: pair programming / small loop -->
 		<div
 			class="cl-zone cl-zone-green"
@@ -107,7 +144,7 @@
 			<div class="cl-zone-header">
 				<span class="cl-zone-dot" style="background:#10b981;"></span>
 				<span class="cl-zone-title" style="color:#10b981;">Get Feedback</span>
-				<span class="cl-zone-sub">Pair programming loop</span>
+				<span class="cl-zone-sub">Pair programming</span>
 			</div>
 			<div class="cl-zone-chips">
 				{#each greenSlot as chip (chip.id)}
@@ -125,43 +162,6 @@
 					</div>
 				{/each}
 				{#if greenSlot.length === 0}
-					<span class="cl-zone-empty">Drop here</span>
-				{/if}
-			</div>
-		</div>
-
-		<!-- Blue zone: code review / big loop -->
-		<div
-			class="cl-zone cl-zone-blue"
-			class:zone-over={dragOver === 'blue'}
-			class:zone-drag-active={dragChip !== null}
-			ondragover={(e) => { e.preventDefault(); dragOver = 'blue'; }}
-			ondragleave={() => { if (dragOver === 'blue') dragOver = null; }}
-			ondrop={() => drop('blue')}
-			role="region"
-			aria-label="Get Feedback (Code Review) drop zone"
-		>
-			<div class="cl-zone-header">
-				<span class="cl-zone-dot" style="background:#818cf8;"></span>
-				<span class="cl-zone-title" style="color:#818cf8;">Get Feedback</span>
-				<span class="cl-zone-sub">Code review loop</span>
-			</div>
-			<div class="cl-zone-chips">
-				{#each blueSlot as chip (chip.id)}
-					<div
-						class="cl-chip cl-chip-blue"
-						class:dragging={dragChip?.id === chip.id}
-						draggable="true"
-						ondragstart={(e) => { e.dataTransfer!.effectAllowed = 'move'; startDrag(chip, 'blue'); }}
-						ondragend={endDrag}
-						role="button"
-						tabindex="0"
-					>
-						<span class="cl-chip-icon">{chip.icon}</span>
-						{chip.label}
-					</div>
-				{/each}
-				{#if blueSlot.length === 0}
 					<span class="cl-zone-empty">Drop here</span>
 				{/if}
 			</div>
@@ -201,11 +201,29 @@
 		user-select: none;
 	}
 
-	/* ── Diagram ───────────────────────────────────────── */
+	/* ── Explanation ────────────────────────────────────── */
+	.cl-insight {
+		font-size: 1.05rem;
+		color: var(--text-secondary);
+		line-height: 1.6;
+		text-align: center;
+		max-width: 600px;
+		margin: 0 auto 1.5rem;
+	}
+
+	/* ── Main row: zone | diagram | zone ───────────────── */
+	.cl-main {
+		display: grid;
+		grid-template-columns: 1fr 2fr 1fr;
+		gap: 1rem;
+		align-items: stretch;
+		margin-bottom: 1rem;
+	}
+
+	/* ── Diagram (center) ───────────────────────────────── */
 	.cl-diagram {
 		display: flex;
 		justify-content: center;
-		margin-bottom: 1.5rem;
 	}
 
 	.cl-track {
@@ -216,30 +234,13 @@
 		width: 100%;
 		display: flex;
 		justify-content: center;
+		align-items: center;
 	}
 
 	.cl-svg {
 		width: 100%;
-		max-width: 400px;
+		max-width: 340px;
 		display: block;
-	}
-
-	/* ── Explanation ────────────────────────────────────── */
-	.cl-insight {
-		font-size: 1.05rem;
-		color: var(--text-secondary);
-		line-height: 1.6;
-		text-align: center;
-		max-width: 600px;
-		margin: 0 auto 1.75rem;
-	}
-
-	/* ── Two zones ──────────────────────────────────────── */
-	.cl-zones {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 1rem;
-		margin-bottom: 1rem;
 	}
 
 	.cl-zone {
@@ -392,11 +393,13 @@
 	}
 
 	/* ── Mobile ────────────────────────────────────────── */
-	@media (max-width: 560px) {
-		.cl-zones {
+	@media (max-width: 700px) {
+		.cl-main {
 			grid-template-columns: 1fr;
 		}
+	}
 
+	@media (max-width: 560px) {
 		.cl-chip {
 			font-size: 0.75rem;
 			padding: 0.3rem 0.6rem;
