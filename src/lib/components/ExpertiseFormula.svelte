@@ -4,7 +4,7 @@
 	let activeLevel = $state(-1);
 
 	let visibleLayers = $derived(
-		expertiseLayers.filter((_, i) => i <= activeLevel)
+		expertiseLayers.filter((_, i) => i === activeLevel)
 	);
 
 	function toggleLayer(index: number) {
@@ -22,11 +22,10 @@
 				{/if}
 				<button
 					class="ef-term"
-					class:ef-term-active={i <= activeLevel}
-					class:ef-term-current={i === activeLevel}
+					class:ef-term-active={i === activeLevel}
 					style="--layer-color: {layer.color}; --layer-color-faded: {layer.colorFaded};"
 					onclick={() => toggleLayer(i)}
-					aria-expanded={i <= activeLevel}
+					aria-expanded={i === activeLevel}
 					aria-controls="ef-detail-{layer.id}"
 				>
 					{layer.title}
@@ -134,12 +133,12 @@
 		color: var(--layer-color);
 	}
 
-	.ef-term-current {
+	.ef-term-active {
 		box-shadow: 0 0 20px color-mix(in srgb, var(--layer-color) 30%, transparent);
 		transform: scale(1.05);
 	}
 
-	.ef-fraction-bar {
+.ef-fraction-bar {
 		width: 100%;
 		max-width: 620px;
 		height: 2px;
@@ -301,7 +300,7 @@
 	/* ── Reduced motion ─────────────────────────────────── */
 	@media (prefers-reduced-motion: reduce) {
 		.ef-term,
-		.ef-term-current {
+		.ef-term-active {
 			transition: none;
 			transform: none;
 		}

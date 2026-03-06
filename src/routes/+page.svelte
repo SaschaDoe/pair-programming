@@ -9,6 +9,7 @@
 	import ExpertiseFormula from '$lib/components/ExpertiseFormula.svelte';
 	import CombinedLoopDiagram from '$lib/components/CombinedLoopDiagram.svelte';
 	import KanbanBoard from '$lib/components/KanbanBoard.svelte';
+	import PodiumChallenge from '$lib/components/PodiumChallenge.svelte';
 	import {
 		benefits, safetyTips, classicObjections, pitfalls, pairingStyles,
 		whenColumns, sessionSteps, bestPractices, summaryCards, sources,
@@ -391,7 +392,6 @@
 			<p class="hero-subtitle">A tool for your toolbox — for when it's time to look closely.</p>
 		</ScrollReveal>
 		<div class="scroll-hint">
-			<span>Scroll to explore</span>
 			<svg width="20" height="20" viewBox="0 0 20 20" fill="none">
 				<path d="M10 4v12M4 10l6 6 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
 			</svg>
@@ -705,6 +705,21 @@
 </section>
 
 <!-- ============================================================ -->
+<!-- SECTION: HAMILTON PHOTO                                      -->
+<!-- ============================================================ -->
+<section class="section section-hamilton">
+	<div class="hamilton-wrap">
+		<ScrollReveal direction="none">
+			<img
+				src="/pics/960px-Margaret_Hamilton_-_restoration.jpg"
+				alt="Margaret Hamilton standing next to the Apollo Guidance Computer source code"
+				class="hamilton-photo"
+			/>
+		</ScrollReveal>
+	</div>
+</section>
+
+<!-- ============================================================ -->
 <!-- SECTION: EXPERTISE FUNCTION                                   -->
 <!-- ============================================================ -->
 <section class="section" id="expertise">
@@ -806,15 +821,7 @@
 						<text x="44" y="52" fill="#ef4444" font-size="11" font-weight="600">Solo</text>
 					</g>
 
-					<!-- Crossover highlight -->
-					<g opacity="0">
-						<animate attributeName="opacity" from="0" to="1" dur="0.6s" begin="3.2s" fill="freeze"/>
-						<line x1="260" y1="242" x2="260" y2="310" stroke="#818cf8" stroke-width="1" stroke-dasharray="4,3"/>
-						<circle cx="260" cy="242" r="5" fill="#818cf8" opacity="0.8"/>
-						<text x="272" y="239" fill="#818cf8" font-size="11" font-weight="600" text-anchor="start">Crossover</text>
-					</g>
-
-					<!-- Investment zone shade -->
+	<!-- Investment zone shade -->
 					<rect x="80" y="250" width="180" height="28" fill="#10b981" fill-opacity="0.06" rx="4" opacity="0">
 						<animate attributeName="opacity" from="0" to="1" dur="0.4s" begin="3.5s" fill="freeze"/>
 					</rect>
@@ -851,38 +858,13 @@
 			</p>
 		</ScrollReveal>
 
-		<div class="pairing-cards">
-			<ScrollReveal delay={200}>
-				<div class="pairing-card pairing-best">
-					<span class="pairing-rank">01</span>
-					<div class="pairing-info">
-						<h3>Junior + Junior</h3>
-						<p>Both want to learn and both bring their own knowledge. No one holds back &mdash; questions flow freely, and explaining forces understanding for both.</p>
-					</div>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={350}>
-				<div class="pairing-card pairing-good">
-					<span class="pairing-rank">02</span>
-					<div class="pairing-info">
-						<h3>Junior + Senior</h3>
-						<p>Strong knowledge transfer, but asymmetric &mdash; one person ends up teaching. The junior grows fast; the senior refines communication. The asymmetry costs some efficiency.</p>
-					</div>
-				</div>
-			</ScrollReveal>
-			<ScrollReveal delay={500}>
-				<div class="pairing-card pairing-limited">
-					<span class="pairing-rank">03</span>
-					<div class="pairing-info">
-						<h3>Senior + Senior</h3>
-						<p>Fast on hard problems, minimal learning for either. No mentoring effect. Best reserved for critical architecture work, not for growing the team.</p>
-					</div>
-				</div>
-			</ScrollReveal>
-		</div>
+		<ScrollReveal delay={200}>
+			<PodiumChallenge />
+		</ScrollReveal>
 	</div>
 </section>
 
+<!-- ============================================================ -->
 <!-- ============================================================ -->
 <!-- SECTION 3: REVIEWS NEED INSIGHT (Interactive Formula)        -->
 <!-- ============================================================ -->
@@ -2175,58 +2157,26 @@
 		border-radius: 12px;
 	}
 
-	/* ── Pairing Combinations Cards ──────────────────────── */
-	.pairing-cards {
+/* ── Hamilton Photo Section ─────────────────────────────── */
+	.section-hamilton {
+		padding: 0;
+		background: #000;
+	}
+
+	.hamilton-wrap {
 		display: flex;
-		flex-direction: column;
-		margin: 2rem 0;
-		border: 1px solid var(--border);
-		border-radius: var(--radius-sm);
-		overflow: hidden;
+		justify-content: center;
 	}
 
-	.pairing-card {
-		display: flex;
-		align-items: flex-start;
-		gap: 1.5rem;
-		padding: 1.25rem 1.5rem;
-		background: var(--bg-card);
-		border-left: 3px solid transparent;
+	.hamilton-photo {
+		display: block;
+		width: 100%;
+		max-width: 520px;
+		height: auto;
+		filter: grayscale(100%);
 	}
 
-	.pairing-card + .pairing-card {
-		border-top: 1px solid var(--border);
-	}
-
-	.pairing-rank {
-		font-size: 0.7rem;
-		font-weight: 700;
-		letter-spacing: 0.08em;
-		color: var(--text-secondary);
-		padding-top: 0.2rem;
-		flex-shrink: 0;
-		width: 1.5rem;
-	}
-
-	.pairing-info h3 {
-		font-size: 1rem;
-		font-weight: 700;
-		color: var(--text-primary);
-		margin: 0 0 0.4rem;
-	}
-
-	.pairing-info p {
-		font-size: 0.9rem;
-		color: var(--text-secondary);
-		line-height: 1.6;
-		margin: 0;
-	}
-
-	.pairing-best { border-left-color: #10b981; }
-	.pairing-good { border-left-color: #818cf8; }
-	.pairing-limited { border-left-color: #52525b; }
-
-	/* ── Section 3: Interactive Formula ────────────────────── */
+/* ── Section 3: Interactive Formula ────────────────────── */
 	.formula-diagram-wrap {
 		margin: 1.5rem 0 1rem;
 	}
